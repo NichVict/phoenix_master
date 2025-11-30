@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.env/
+.venv/
+.pytest_cache/
+.streamlit/
+.DS_Store
+Thumbs.db
+*.csv
+*.xlsx
+*.pickle
+*.pkl
+*.log

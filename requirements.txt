@@ -1,0 +1,47 @@
+# --- CORE STREAMLIT / UI ---
+streamlit
+streamlit-autorefresh
+streamlit-aggrid
+streamlit-extras
+
+# --- DATA / FINANCE ---
+pandas
+numpy
+yfinance
+yahooquery
+polygon-api-client
+oplab-client-python
+
+# --- PLOTS & VISUALIZAÇÃO ---
+matplotlib
+seaborn
+plotly
+altair
+bokeh
+kaleido
+mplfinance
+
+# --- OUTROS UTILITÁRIOS IMPORTANTES ---
+requests
+schedule
+lxml
+scipy
+tenacity
+supabase
+psycopg2-binary
+
+# --- PDF / RELATÓRIO ---
+reportlab
+weasyprint
+
+# --- TELEGRAM ---
+python-telegram-bot==20.7
+
+python-dotenv
+
+
+
+
+
+
+
