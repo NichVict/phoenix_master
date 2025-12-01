@@ -128,30 +128,27 @@ LINK_ASSINAR = "https://app.infinitepay.io/products"
 # 🟦 FUNÇÃO PARA DESENHAR UM CARD
 # ============================================
 def render_card(nome, cor_icone, resumo_dict, pagina):
-    html = f"""
-<div class="fenix-card">
-    <div class="card-title">{cor_icone} {nome}</div>
-    <div class="card-sub">Resumo rápido das operações monitoradas</div>
-
-    <div class="metric-line">
-        Trades Pendentes:
-        <span class="metric-value">{resumo_dict['pendentes']}</span>
-    </div>
-    <div class="metric-line">
-        Trades em Andamento:
-        <span class="metric-value">{resumo_dict['andamento']}</span>
-    </div>
-    <div class="metric-line">
-        Total Monitorado:
-        <span class="metric-value">{resumo_dict['total']}</span>
-    </div>
-
-    <a href="{LINK_ASSINAR}" target="_blank" class="btn-assinar">
-        ASSINAR AGORA!
-    </a>
+    html = f"""<div class="fenix-card">
+<div class="card-title">{cor_icone} {nome}</div>
+<div class="card-sub">Resumo rápido das operações monitoradas</div>
+<div class="metric-line">
+Trades Pendentes:
+<span class="metric-value">{resumo_dict['pendentes']}</span>
 </div>
-"""
+<div class="metric-line">
+Trades em Andamento:
+<span class="metric-value">{resumo_dict['andamento']}</span>
+</div>
+<div class="metric-line">
+Total Monitorado:
+<span class="metric-value">{resumo_dict['total']}</span>
+</div>
+<a href="{LINK_ASSINAR}" target="_blank" class="btn-assinar">
+ASSINAR AGORA!
+</a>
+</div>"""
     st.markdown(html, unsafe_allow_html=True)
+
 
 
 # ============================================
