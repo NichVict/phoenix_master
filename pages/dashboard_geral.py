@@ -606,149 +606,118 @@ def render_carteira(card_data):
 
     desc = tendencia_text(stats)
 
-    # -------- MÉTRICAS PRINCIPAIS --------
-    m1 = f"""
-    <div class="metric-box">
-        <div class="metric-label">Lucro total 30d</div>
-        <div class="metric-value" style="color:{('#22c55e' if lucro_total_pct>=0 else '#ef4444')};">
-            {lucro_total_pct:.1f}%
-        </div>
-        <div class="metric-sub">soma dos trades fechados</div>
-    </div>
-    """
+    # MÉTRICAS PRINCIPAIS
+    m1 = f"""<div class='metric-box'>
+<div class='metric-label'>Lucro total 30d</div>
+<div class='metric-value' style='color:{'#22c55e' if lucro_total_pct>=0 else '#ef4444'};'>{lucro_total_pct:.1f}%</div>
+<div class='metric-sub'>soma dos trades fechados</div>
+</div>"""
 
-    m2 = f"""
-    <div class="metric-box">
-        <div class="metric-label">Winrate 30d</div>
-        <div class="metric-value">{winrate_pct:.1f}%</div>
-        <div class="metric-sub">{qtd_trades} operações fechadas</div>
-    </div>
-    """
+    m2 = f"""<div class='metric-box'>
+<div class='metric-label'>Winrate 30d</div>
+<div class='metric-value'>{winrate_pct:.1f}%</div>
+<div class='metric-sub'>{qtd_trades} operações fechadas</div>
+</div>"""
 
-    m3 = f"""
-    <div class="metric-box">
-        <div class="metric-label">Média por trade</div>
-        <div class="metric-value" style="color:{('#22c55e' if media_pct>=0 else '#ef4444')};">
-            {media_pct:.2f}%
-        </div>
-        <div class="metric-sub">últimos 30 dias</div>
-    </div>
-    """
+    m3 = f"""<div class='metric-box'>
+<div class='metric-label'>Média por trade</div>
+<div class='metric-value' style='color:{'#22c55e' if media_pct>=0 else '#ef4444'};'>{media_pct:.2f}%</div>
+<div class='metric-sub'>últimos 30 dias</div>
+</div>"""
 
-    # -------- MÉTRICAS ESPECIAIS OU NORMAL --------
+    # MÉTRICAS ESPECIAIS OPÇÕES
     if card_data["id"] == "OPCOES":
         total_operacoes = qtd_trades
         abertas = load_opcoes_abertas()
         qtd_abertas = len(abertas)
-
         melhor_op = best_trade_opcoes(stats)
-        melhor_label = (
-            f"{melhor_op['ticker']} ({melhor_op['pnl_pct']:.1f}%)"
-            if melhor_op else "—"
-        )
+        melhor_label = f"{melhor_op['ticker']} ({melhor_op['pnl_pct']:.1f}%)" if melhor_op else "—"
 
-        m4 = f"""
-        <div class="metric-box">
-            <div class="metric-label">TOTAL DE OPERAÇÕES</div>
-            <div class="metric-value">{total_operacoes}</div>
-            <div class="metric-sub">últimos 30 dias</div>
-        </div>
-        """
+        m4 = f"""<div class='metric-box'>
+<div class='metric-label'>TOTAL DE OPERAÇÕES</div>
+<div class='metric-value'>{total_operacoes}</div>
+<div class='metric-sub'>últimos 30 dias</div>
+</div>"""
 
-        m5 = f"""
-        <div class="metric-box">
-            <div class="metric-label">EM ANDAMENTO</div>
-            <div class="metric-value">{qtd_abertas}</div>
-            <div class="metric-sub">posições abertas</div>
-        </div>
-        """
+        m5 = f"""<div class='metric-box'>
+<div class='metric-label'>EM ANDAMENTO</div>
+<div class='metric-value'>{qtd_abertas}</div>
+<div class='metric-sub'>posições abertas</div>
+</div>"""
 
-        m6 = f"""
-        <div class="metric-box">
-            <div class="metric-label">OP. MAIS LUCRATIVA</div>
-            <div class="metric-value">{melhor_label}</div>
-            <div class="metric-sub">últimos 30 dias</div>
-        </div>
-        """
+        m6 = f"""<div class='metric-box'>
+<div class='metric-label'>OP. MAIS LUCRATIVA</div>
+<div class='metric-value'>{melhor_label}</div>
+<div class='metric-sub'>últimos 30 dias</div>
+</div>"""
+
+    # MÉTRICAS AÇÕES
     else:
-        m4 = f"""
-        <div class="metric-box">
-            <div class="metric-label">Pendentes</div>
-            <div class="metric-value">{resumo_estado['pendentes']}</div>
-            <div class="metric-sub">aguardando gatilho</div>
-        </div>
-        """
+        m4 = f"""<div class='metric-box'>
+<div class='metric-label'>Pendentes</div>
+<div class='metric-value'>{resumo_estado['pendentes']}</div>
+<div class='metric-sub'>aguardando gatilho</div>
+</div>"""
 
-        m5 = f"""
-        <div class="metric-box">
-            <div class="metric-label">Em andamento</div>
-            <div class="metric-value">{resumo_estado['andamento']}</div>
-            <div class="metric-sub">posições abertas</div>
-        </div>
-        """
+        m5 = f"""<div class='metric-box'>
+<div class='metric-label'>Em andamento</div>
+<div class='metric-value'>{resumo_estado['andamento']}</div>
+<div class='metric-sub'>posições abertas</div>
+</div>"""
 
-        m6 = f"""
-        <div class="metric-box">
-            <div class="metric-label">Total monitorado</div>
-            <div class="metric-value">{resumo_estado['total']}</div>
-            <div class="metric-sub">ativos sob vigilância</div>
-        </div>
-        """
+        m6 = f"""<div class='metric-box'>
+<div class='metric-label'>Total monitorado</div>
+<div class='metric-value'>{resumo_estado['total']}</div>
+<div class='metric-sub'>ativos sob vigilância</div>
+</div>"""
 
-    # ===========================================================
-    #  🔥 AGORA SIM: TODA A ESTRUTURA DO CARD EM UM ÚNICO HTML
-    # ===========================================================
+    # CARD COMPLETO EM UM ÚNICO HTML
     card_html = f"""
-<div class="card-wrapper">
+<div class='card-wrapper'>
 
-    <div class="card-header">
-        <div class="card-title-left">
-            <div class="card-title-main">{emoji} {nome}</div>
-            <div class="card-tag">Phoenix Strategy · {tag_extra}</div>
-        </div>
+<div class='card-header'>
+  <div class='card-title-left'>
+    <div class='card-title-main'>{emoji} {nome}</div>
+    <div class='card-tag'>Phoenix Strategy · {tag_extra}</div>
+  </div>
 
-        <div class="score-badge">
-            <div class="score-label">Phoenix Score</div>
-            <div class="score-value" style="color:{cor_score};">{score}</div>
-            <div class="score-bar-outer">
-                <div class="score-bar-inner" style="width:{score}%;background:{cor_score};"></div>
-            </div>
-        </div>
+  <div class='score-badge'>
+    <div class='score-label'>Phoenix Score</div>
+    <div class='score-value' style='color:{cor_score};'>{score}</div>
+    <div class='score-bar-outer'>
+      <div class='score-bar-inner' style='width:{score}%;background:{cor_score};'></div>
     </div>
+  </div>
+</div>
 
-    <div class="metrics-grid">
-        {m1} {m2} {m3}
-    </div>
+<div class='metrics-grid'>
+  {m1}{m2}{m3}
+</div>
 
-    <div class="metrics-grid">
-        {m4} {m5} {m6}
-    </div>
+<div class='metrics-grid'>
+  {m4}{m5}{m6}
+</div>
 
-    <div class="card-desc">{desc}</div>
+<div class='card-desc'>{desc}</div>
 
 </div>
 """
 
     st.markdown(card_html, unsafe_allow_html=True)
 
-    # BOTÃO FORA DO CARD
+    # BOTÃO FORA
     st.markdown(
-        f"""
-        <a href="{LINK_ASSINAR}" target="_blank" class="btn-assinar">ASSINAR AGORA!</a>
-        """,
+        f"""<a href='{LINK_ASSINAR}' target='_blank' class='btn-assinar'>ASSINAR AGORA!</a>""",
         unsafe_allow_html=True,
     )
 
-    # GRÁFICOS (fora do card)
+    # GRÁFICOS
     c1, c2 = st.columns([1.35, 0.65])
     with c1:
         st.markdown("##### 📈 Performance recente (30d)")
         fig_spark = sparkline_figure(stats)
         if fig_spark:
             st.plotly_chart(fig_spark, use_container_width=True)
-        else:
-            st.info("Ainda não há operações encerradas suficientes.")
-
     with c2:
         st.markdown("##### 📊 Trades ativos")
         fig_bar = barras_pend_andamento(resumo_estado)
