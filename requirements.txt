@@ -29,7 +29,7 @@ scipy
 tenacity
 
 # --- SUPABASE AUTH (VERSÃO ESTÁVEL) ---
-supabase==1.0.3
+supabase
 gotrue==1.0.1
 psycopg2-binary
 
