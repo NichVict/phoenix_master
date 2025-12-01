@@ -1680,7 +1680,7 @@ with st.expander("📕 Ver operações encerradas", expanded=False):
 # 📊 RESUMO VISUAL — OPERAÇÕES ENCERRADAS (FÊNIX)
 # ============================================
 
-st.markdown("## 🦅 Resumo de Desempenho — Scanner Fênix (Operações Encerradas)")
+st.markdown("#### 🦅 Resumo de Desempenho")
 
 if df_encerradas.empty:
     st.info("Nenhuma operação encerrada ainda.")
@@ -1742,7 +1742,7 @@ else:
 
 
     # ROW 1
-    st.markdown("### 🔥 Indicadores Principais")
+    st.markdown("##### 🔥 Indicadores")
     col1, col2, col3, col4 = st.columns(4)
     with col1: card("Lucro Total (%)", f"{total_lucro:.2f}%", "#00E676")
     with col2: card("Operações", f"{total_ops}", "#00E676")
