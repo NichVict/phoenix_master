@@ -33,7 +33,13 @@ from fenix_opcoes.supabase_ops import inserir_operacao
 from fenix_opcoes.notificacoes import enviar_email, enviar_telegram
 import fenix_opcoes.supabase_ops as supabase_ops_mod
 
+from auth.token_login import require_token
 
+# 🔐 Apenas Admin pode acessar
+user = require_token()
+if user["email"] != st.secrets.get("ADMIN_EMAIL"):
+    st.error("🚫 Acesso restrito ao administrador.")
+    st.stop()
 
 # ===============================
 
