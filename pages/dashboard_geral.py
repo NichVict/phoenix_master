@@ -660,6 +660,37 @@ ASSINAR AGORA!
 # ===========================
 # 🔢 MONTAGEM DOS DADOS DAS CARTEIRAS
 # ===========================
+
+# ===========================
+# 🔢 CONFIGURAÇÃO DAS CARTEIRAS
+# ===========================
+carteiras_cfg = [
+    {
+        "id": "IBOV",
+        "nome": "Carteira IBOV",
+        "emoji": "🟦",
+        "tag": "Large Caps Brasil",
+    },
+    {
+        "id": "BDR",
+        "nome": "Carteira BDR",
+        "emoji": "🟨",
+        "tag": "Exposição Internacional",
+    },
+    {
+        "id": "SMLL",
+        "nome": "Small Caps",
+        "emoji": "🟩",
+        "tag": "Agressiva · Crescimento",
+    },
+    {
+        "id": "OPCOES",
+        "nome": "Carteira de Opções",
+        "emoji": "🟪",
+        "tag": "Estratégias Assimétricas",
+    },
+]
+
 cards_data = []
 for cfg in carteiras_cfg:
     resumo = resumo_carteira_estado(cfg["id"])
