@@ -27,10 +27,7 @@ schedule
 lxml
 scipy
 tenacity
-
-# --- SUPABASE AUTH (VERSÃO ESTÁVEL) ---
 supabase
-gotrue==1.0.1
 psycopg2-binary
 
 # --- PDF / RELATÓRIO ---
