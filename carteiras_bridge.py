@@ -22,9 +22,12 @@ except Exception as e:
 # ===========================
 # REEXPORTA FUNÇÕES E STATES
 # ===========================
-curto_state           = dash.curto_state
-loss_state            = dash.loss_state
-get_indice_ativo      = dash.get_indice_ativo
+curto_state            = dash.curto_state
+loss_state             = dash.loss_state
+get_indice_ativo       = dash.get_indice_ativo
 render_pendentes_cards = dash.render_pendentes_cards
 render_andamento_cards = dash.render_andamento_cards
-render_resumo_30d     = dash.render_resumo_30d
+render_resumo_30d      = dash.render_resumo_30d
+
+# 👉 nova linha pra permitir o Dashboard puxar os dados de 30 dias
+supabase_select        = dash.supabase_select
