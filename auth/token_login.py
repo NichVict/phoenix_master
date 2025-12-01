@@ -11,6 +11,35 @@ def get_client():
     return create_client(url, key)
 
 
+def admin_login():
+    st.title("🔐 Login Administrador")
+
+    user_input = st.text_input("Usuário")
+    pwd_input = st.text_input("Senha", type="password")
+
+    if st.button("Entrar"):
+        admin_user = st.secrets.get("ADMIN_LOGIN", "")
+        admin_pass = st.secrets.get("ADMIN_PASSWORD", "")
+
+        if user_input == admin_user and pwd_input == admin_pass:
+            st.session_state["user"] = {
+                "id": "admin",
+                "email": st.secrets.get("ADMIN_EMAIL", ""),
+                "carteiras": [
+                    "Carteira de Ações IBOV",
+                    "Carteira de BDRs",
+                    "Carteira de Small Caps",
+                    "Carteira de Opções",
+                    "Scanner Fênix",
+                    "Dashboard Geral",
+                ],
+            }
+            st.success("Login realizado com sucesso!")
+            st.experimental_rerun()
+        else:
+            st.error("Credenciais inválidas.")
+
+
 # ============================
 # REQUIRE TOKEN OU ADMIN BYPASS
 # ============================
