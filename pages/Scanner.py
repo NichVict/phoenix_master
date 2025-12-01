@@ -655,9 +655,9 @@ if "opcoes" not in st.session_state:  st.session_state["opcoes"] = pd.DataFrame(
 # Estado e execução automática
 # ===============================
 if "primeira_execucao" not in st.session_state:
-    st.session_state["primeira_execucao"] = True
-else:
     st.session_state["primeira_execucao"] = False
+else:
+    st.session_state["primeira_execucao"] = True
 
 
 # Executa automaticamente na primeira abertura da página
