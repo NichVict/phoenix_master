@@ -9,6 +9,11 @@ from carteiras_bridge import (
     get_indice_ativo,
     supabase_select,
 )
+import requests
+import fenix_opcoes.supabase_ops as supabase_ops_mod
+
+REST_ENDPOINT_OP = getattr(supabase_ops_mod, "REST_ENDPOINT", None)
+HEADERS_OP = getattr(supabase_ops_mod, "HEADERS", None)
 
 LINK_ASSINAR = "https://app.infinitepay.io/products"
 
@@ -257,16 +262,6 @@ def load_ops_30d():
     return dados
 
 def build_stats_for_indice(dados_gerais, indice_atual: str):
-    # opções podem não estar nessa tabela
-    if indice_atual == "OPCOES":
-        return {
-            "has_data": False,
-            "lucro_total_pct": 0.0,
-            "media_pct": 0.0,
-            "winrate": 0.0,
-            "qtd_trades": 0,
-            "sparkline": [],
-        }
 
     filtrados = [x for x in dados_gerais if (x.get("indice") or "").upper() == indice_atual.upper()]
 
@@ -316,6 +311,144 @@ def build_stats_for_indice(dados_gerais, indice_atual: str):
         "qtd_trades": qtd_trades,
         "sparkline": pontos_pct,
     }
+
+
+def build_stats_opcoes_30d():
+    """
+    Usa o mesmo endpoint de opções do Scanner (fenix_opcoes.supabase_ops)
+    para montar as estatísticas de 30 dias: lucro total, média, winrate, sparkline.
+    """
+    if not REST_ENDPOINT_OP or not HEADERS_OP:
+        return {
+            "has_data": False,
+            "lucro_total_pct": 0.0,
+            "media_pct": 0.0,
+            "winrate": 0.0,
+            "qtd_trades": 0,
+            "sparkline": [],
+        }
+
+    hoje = datetime.date.today()
+    inicio_30d = hoje - datetime.timedelta(days=30)
+
+    params = {
+        "select": """
+            id,
+            symbol,
+            preco_entrada,
+            preco_saida,
+            retorno_final_pct,
+            timestamp_saida,
+            created_at,
+            status,
+            indice
+        """,
+        "indice": "eq.OPCOES",
+        "status": "eq.encerrada",
+        "order": "timestamp_saida.desc",
+    }
+
+    try:
+        resp = requests.get(REST_ENDPOINT_OP, headers=HEADERS_OP, params=params, timeout=20)
+        resp.raise_for_status()
+        data = resp.json()
+    except Exception:
+        return {
+            "has_data": False,
+            "lucro_total_pct": 0.0,
+            "media_pct": 0.0,
+            "winrate": 0.0,
+            "qtd_trades": 0,
+            "sparkline": [],
+        }
+
+    if not data:
+        return {
+            "has_data": False,
+            "lucro_total_pct": 0.0,
+            "media_pct": 0.0,
+            "winrate": 0.0,
+            "qtd_trades": 0,
+            "sparkline": [],
+        }
+
+    df = pd.DataFrame(data)
+
+    # converte datas
+    for col in ["timestamp_saida", "created_at"]:
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], errors="coerce")
+
+    # filtra últimos 30 dias
+    if "timestamp_saida" not in df.columns:
+        return {
+            "has_data": False,
+            "lucro_total_pct": 0.0,
+            "media_pct": 0.0,
+            "winrate": 0.0,
+            "qtd_trades": 0,
+            "sparkline": [],
+        }
+
+    df = df.dropna(subset=["timestamp_saida"]).copy()
+    df["data_saida"] = df["timestamp_saida"].dt.date
+    df_30d = df[
+        (df["data_saida"] >= inicio_30d) &
+        (df["data_saida"] <= hoje)
+    ].copy()
+
+    if df_30d.empty:
+        return {
+            "has_data": False,
+            "lucro_total_pct": 0.0,
+            "media_pct": 0.0,
+            "winrate": 0.0,
+            "qtd_trades": 0,
+            "sparkline": [],
+        }
+
+    # PnL %: usa retorno_final_pct se existir; senão, calcula pelo preço
+    if "retorno_final_pct" in df_30d.columns:
+        df_30d["pnl_pct"] = pd.to_numeric(df_30d["retorno_final_pct"], errors="coerce").fillna(0.0)
+    else:
+        df_30d["preco_entrada"] = pd.to_numeric(df_30d["preco_entrada"], errors="coerce")
+        df_30d["preco_saida"] = pd.to_numeric(df_30d["preco_saida"], errors="coerce")
+        df_30d["pnl_pct"] = (
+            (df_30d["preco_saida"] - df_30d["preco_entrada"]) /
+            df_30d["preco_entrada"]
+        ).fillna(0.0) * 100.0
+
+    valores = df_30d["pnl_pct"].dropna().tolist()
+    if not valores:
+        return {
+            "has_data": False,
+            "lucro_total_pct": 0.0,
+            "media_pct": 0.0,
+            "winrate": 0.0,
+            "qtd_trades": 0,
+            "sparkline": [],
+        }
+
+    lucro_total_pct = sum(valores)
+    media_pct = sum(valores) / len(valores)
+    qtd_trades = len(valores)
+    wins = [v for v in valores if v > 0]
+    winrate = len(wins) / qtd_trades if qtd_trades else 0.0
+
+    sparkline = [
+        {"data": row["timestamp_saida"], "pct": row["pnl_pct"]}
+        for _, row in df_30d.sort_values("timestamp_saida").iterrows()
+    ]
+
+    return {
+        "has_data": True,
+        "lucro_total_pct": lucro_total_pct,
+        "media_pct": media_pct,
+        "winrate": winrate,
+        "qtd_trades": qtd_trades,
+        "sparkline": sparkline,
+    }
+
 
 # ===========================
 # 🔥 PHOENIX SCORE
@@ -527,19 +660,15 @@ ASSINAR AGORA!
 # ===========================
 # 🔢 MONTAGEM DOS DADOS DAS CARTEIRAS
 # ===========================
-dados_30d_geral = load_ops_30d()
-
-carteiras_cfg = [
-    {"id": "IBOV", "nome": "Carteira IBOV", "emoji": "🟦", "tag": "Large Caps Brasil"},
-    {"id": "BDR", "nome": "Carteira BDR", "emoji": "🟨", "tag": "Exposição Internacional"},
-    {"id": "SMLL", "nome": "Small Caps", "emoji": "🟩", "tag": "Agressiva · Crescimento"},
-    {"id": "OPCOES", "nome": "Carteira de Opções", "emoji": "🟪", "tag": "Estratégias Assimétricas"},
-]
-
 cards_data = []
 for cfg in carteiras_cfg:
     resumo = resumo_carteira_estado(cfg["id"])
-    stats = build_stats_for_indice(dados_30d_geral, cfg["id"])
+
+    if cfg["id"] == "OPCOES":
+        stats = build_stats_opcoes_30d()
+    else:
+        stats = build_stats_for_indice(dados_30d_geral, cfg["id"])
+
     score = phoenix_score(stats, resumo)
     cards_data.append(
         {
@@ -552,6 +681,7 @@ for cfg in carteiras_cfg:
             "score": score,
         }
     )
+
 
 # ===========================
 # 📦 RENDERIZA CADA CARTEIRA (1 COLUNA)
