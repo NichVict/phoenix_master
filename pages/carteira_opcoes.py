@@ -8,6 +8,40 @@ import pandas as pd
 import requests
 import matplotlib.pyplot as plt
 
+import os
+import tempfile
+import datetime
+from typing import List, Dict, Any, Optional
+
+import streamlit as st
+import pandas as pd
+import requests
+import matplotlib.pyplot as plt
+
+# ==== PROTEÇÃO DA PÁGINA (ADICIONE AQUI) ====
+from auth.token_login import require_token, require_carteira
+
+# 🔐 Autenticação + permissão
+user = require_token()
+require_carteira("Carteira de Opções")
+# ============================================
+
+# ==== REPORTLAB PARA PDF ====
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.units import cm
+from reportlab.lib import colors
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+    PageBreak,
+    Image as RLImage,
+)
+from reportlab.lib.styles import getSampleStyleSheet
+
+
 # ==== REPORTLAB PARA PDF ====
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import cm
