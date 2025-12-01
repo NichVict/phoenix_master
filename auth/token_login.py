@@ -3,75 +3,57 @@ from supabase import create_client
 import json
 
 # ============================
-# CLIENT DO SUPABASE
+# CLIENT DO SUPABASE (CLIENTES)
 # ============================
 def get_client():
-    url = st.secrets["SUPABASE_URL_CLIENTES"]
-    key = st.secrets["SUPABASE_KEY_CLIENTES"]
+    # tenta primeiro os CLIENTES, depois o padrão
+    url = (
+        st.secrets.get("SUPABASE_URL_CLIENTES")
+        or st.secrets.get("SUPABASE_URL")
+    )
+    key = (
+        st.secrets.get("SUPABASE_KEY_CLIENTES")
+        or st.secrets.get("SUPABASE_KEY")
+    )
+
+    if not url or not key:
+        st.error("Configuração do Supabase ausente. Verifique SUPABASE_URL_CLIENTES / SUPABASE_KEY_CLIENTES.")
+        st.stop()
+
     return create_client(url, key)
 
 
-
 # ============================
-# LOGIN ADMINISTRADOR
-# ============================
-def admin_login():
-    st.title("🔐 Login Administrador")
-
-    user_input = st.text_input("Usuário")
-    pwd_input = st.text_input("Senha", type="password")
-
-    if st.button("Entrar"):
-        admin_user = st.secrets.get("ADMIN_LOGIN", "")
-        admin_pass = st.secrets.get("ADMIN_PASSWORD", "")
-
-        if user_input == admin_user and pwd_input == admin_pass:
-
-            st.session_state["user"] = {
-                "id": "admin",
-                "email": st.secrets.get("ADMIN_EMAIL", ""),
-                "carteiras": [
-                    "Carteira de Ações IBOV",
-                    "Carteira de BDRs",
-                    "Carteira de Small Caps",
-                    "Carteira de Opções",
-                    "Scanner Fênix",
-                    "Dashboard Geral",
-                ],
-            }
-
-            # 👇 AQUI ESTÁ A CHAVE
-            st.session_state["admin_logged"] = True
-
-            st.success("Login realizado com sucesso!")
-            st.experimental_rerun()
-
-        else:
-            st.error("Credenciais inválidas.")
-
-
-
-
-# ============================
-# LOGIN POR TOKEN (CLIENTE)
+# LOGIN POR TOKEN (CLIENTE / ADMIN)
 # ============================
 def require_token():
-    params = st.experimental_get_query_params()
-    token = params.get("token", [None])[0]
+    # 🔧 BYPASS só pra manutenção (DEIXE FALSE pra testar cliente)
+    bypass = str(st.secrets.get("ADMIN_BYPASS", "FALSE")).upper() == "TRUE"
+    admin_email = st.secrets.get("ADMIN_EMAIL", "")
 
-    # 👇 NOVO BLOCO — ADMIN JÁ LOGADO
-    if st.session_state.get("admin_logged"):
-        return st.session_state["user"]
+    if bypass and admin_email:
+        user = {
+            "id": "admin",
+            "email": admin_email,
+            "carteiras": [
+                "Carteira de Ações IBOV",
+                "Carteira de BDRs",
+                "Carteira de Small Caps",
+                "Carteira de Opções",
+                "Scanner Fênix",
+                "Dashboard Geral",
+            ],
+        }
+        st.session_state["user"] = user
+        return user
 
-    # ============================
-    # SEM TOKEN → LOGIN ADMIN
-    # ============================
+    # ---- TOKEN NORMAL ----
+    token = st.experimental_get_query_params().get("token", [None])[0]
+
     if not token:
-        return admin_login()
+        st.error("Você precisa acessar pelo link enviado por e-mail.")
+        st.stop()
 
-    # ============================
-    # LOGIN CLIENTE POR TOKEN
-    # ============================
     supabase = get_client()
 
     res = (
@@ -81,14 +63,16 @@ def require_token():
         .execute()
     )
 
-    user = res.data
-    if not user:
+    data = res.data
+    if not data:
         st.error("Token inválido.")
         st.stop()
 
-    user = user[0]
+    user = data[0]
 
-    # Conversão segura
+    # ======================================
+    # CORREÇÃO: transformar carteiras em lista
+    # ======================================
     raw = user.get("carteiras", "[]")
 
     try:
@@ -98,41 +82,42 @@ def require_token():
             carteiras = raw
         else:
             carteiras = []
-    except:
+    except Exception:
         carteiras = []
 
-    # Salva usuário na sessão
-    st.session_state["user"] = {
+    st_user = {
         "id": user["id"],
         "email": user["email"],
         "carteiras": carteiras,
     }
 
-    return st.session_state["user"]
+    st.session_state["user"] = st_user
+    return st_user
 
 
 # ============================
-# VERIFICAR SE O USUÁRIO EXISTE (PÁGINAS)
+# GARANTE QUE HÁ USUÁRIO NA SESSÃO
 # ============================
 def require_session_user():
     user = st.session_state.get("user")
     if not user:
-        st.error("Sessão expirada. Volte para a página inicial.")
+        st.error("Sessão expirada. Acesse novamente pelo link do e-mail.")
         st.stop()
     return user
 
 
 # ============================
-# PROTEÇÃO POR CARTEIRA
+# REQUIRE CARTEIRA ESPECÍFICA
 # ============================
 def require_carteira(nome_carteira):
     user = require_session_user()
+    admin_email = st.secrets.get("ADMIN_EMAIL", "")
 
-    # Admin sempre tem acesso
-    if user["email"] == st.secrets.get("ADMIN_EMAIL"):
+    # Admin vê tudo
+    if admin_email and user["email"] == admin_email:
         return True
 
-    if nome_carteira not in user["carteiras"]:
+    if nome_carteira not in user.get("carteiras", []):
         st.error("🚫 Você não tem acesso a esta carteira.")
         st.stop()
 
