@@ -1771,7 +1771,7 @@ else:
     # ============================================
     # 📈 GRÁFICO — BARRAS DE RESULTADOS
     # ============================================
-    st.markdown("### ⭐ Gráfico dos Resultados (Operações Encerradas)")
+    st.markdown("##### ⭐ Gráfico das Operações Encerradas)")
 
     df_sorted = df.sort_values("retorno_final_pct", ascending=False)
     colors = ["#00E676" if x >= 0 else "#FF5252" for x in df_sorted["retorno_final_pct"]]
