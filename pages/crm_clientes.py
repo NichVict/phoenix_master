@@ -1,5 +1,5 @@
 import streamlit as st
-from crm.clientes import *  # backend
+
 
 st.set_page_config(page_title="CRM – Clientes", layout="wide")
 
