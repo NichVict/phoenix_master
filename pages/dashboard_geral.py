@@ -727,7 +727,6 @@ def render_carteira(card_data):
     score = card_data["score"]
     cor_score = score_color(score)
 
-    # estatísticas gerais
     if stats["has_data"]:
         winrate_pct = stats["winrate"] * 100.0
         media_pct = stats["media_pct"]
@@ -742,45 +741,78 @@ def render_carteira(card_data):
     desc = tendencia_text(stats)
 
     # ===========================================================
-    # 1. CABEÇALHO DO CARD
+    # CARD COMEÇA AQUI
     # ===========================================================
     st.markdown(
-        f"""<div class="card-wrapper">
-<div class="card-header">
-  <div class="card-title-left">
-    <div class="card-title-main">{emoji} {nome}</div>
-    <div class="card-tag">Phoenix Strategy · {tag_extra}</div>
-  </div>
-  <div class="score-badge">
-    <div class="score-label">Phoenix Score</div>
-    <div class="score-value" style="color:{cor_score};">{score}</div>
-    <div class="score-bar-outer">
-      <div class="score-bar-inner" style="width:{score}%;background:{cor_score};"></div>
+        f"""
+<div class="card-wrapper">
+
+  <div class="card-header">
+    <div class="card-title-left">
+      <div class="card-title-main">{emoji} {nome}</div>
+      <div class="card-tag">Phoenix Strategy · {tag_extra}</div>
+    </div>
+    <div class="score-badge">
+      <div class="score-label">Phoenix Score</div>
+      <div class="score-value" style="color:{cor_score};">{score}</div>
+      <div class="score-bar-outer">
+        <div class="score-bar-inner" style="width:{score}%;background:{cor_score};"></div>
+      </div>
     </div>
   </div>
-</div>
+
 """,
         unsafe_allow_html=True,
     )
 
     # ===========================================================
-    # 2. MÉTRICAS — CASO SEJA CARTEIRA DE OPÇÕES
+    # MÉTRICAS PRINCIPAIS (IGUAIS PARA TODAS AS CARTEIRAS)
+    # ===========================================================
+    st.markdown(
+        f"""
+<div class="metrics-grid">
+
+  <div class="metric-box">
+    <div class="metric-label">Lucro total 30d</div>
+    <div class="metric-value" style="color:{('#22c55e' if lucro_total_pct>=0 else '#ef4444')};">
+      {lucro_total_pct:.1f}%
+    </div>
+    <div class="metric-sub">soma dos trades fechados</div>
+  </div>
+
+  <div class="metric-box">
+    <div class="metric-label">Winrate 30d</div>
+    <div class="metric-value">{winrate_pct:.1f}%</div>
+    <div class="metric-sub">{qtd_trades} operações fechadas</div>
+  </div>
+
+  <div class="metric-box">
+    <div class="metric-label">Média por trade</div>
+    <div class="metric-value" style="color:{('#22c55e' if media_pct>=0 else '#ef4444')};">
+      {media_pct:.2f}%
+    </div>
+    <div class="metric-sub">últimos 30 dias</div>
+  </div>
+
+</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ===========================================================
+    # MÉTRICAS ESPECIAIS — APENAS PARA OPÇÕES
     # ===========================================================
     if card_data["id"] == "OPCOES":
 
-        # total de operações encerradas (30 dias)
         total_operacoes = stats["qtd_trades"]
-
-        # operações abertas
         abertas = load_opcoes_abertas()
         qtd_abertas = len(abertas)
 
-        # operação mais lucrativa
         melhor_op = best_trade_opcoes(stats)
-        if melhor_op:
-            melhor_label = f"{melhor_op['ticker']} ({melhor_op['pnl_pct']:.1f}%)"
-        else:
-            melhor_label = "—"
+        melhor_label = (
+            f"{melhor_op['ticker']} ({melhor_op['pnl_pct']:.1f}%)"
+            if melhor_op else "—"
+        )
 
         st.markdown(
             f"""
@@ -810,34 +842,12 @@ def render_carteira(card_data):
         )
 
     # ===========================================================
-    # 3. MÉTRICAS — CARTEIRAS DE AÇÕES (IBOV, BDR, SMLL)
+    # MÉTRICAS DAS AÇÕES (IBOV, BDR, SMLL)
     # ===========================================================
     else:
         st.markdown(
             f"""
 <div class="metrics-grid">
-
-  <div class="metric-box">
-    <div class="metric-label">Lucro total 30d</div>
-    <div class="metric-value" style="color:{('#22c55e' if lucro_total_pct>=0 else '#ef4444')};">
-      {lucro_total_pct:.1f}%
-    </div>
-    <div class="metric-sub">soma dos trades fechados</div>
-  </div>
-
-  <div class="metric-box">
-    <div class="metric-label">Winrate 30d</div>
-    <div class="metric-value">{winrate_pct:.1f}%</div>
-    <div class="metric-sub">{qtd_trades} operações fechadas</div>
-  </div>
-
-  <div class="metric-box">
-    <div class="metric-label">Média por trade</div>
-    <div class="metric-value" style="color:{('#22c55e' if media_pct>=0 else '#ef4444')};">
-      {media_pct:.2f}%
-    </div>
-    <div class="metric-sub">últimos 30 dias</div>
-  </div>
 
   <div class="metric-box">
     <div class="metric-label">Pendentes</div>
@@ -863,23 +873,31 @@ def render_carteira(card_data):
         )
 
     # ===========================================================
-    # 4. DESCRIÇÃO
+    # DESCRIÇÃO (DENTRO DO CARD)
     # ===========================================================
     st.markdown(
         f"""
 <div class="card-desc">{desc}</div>
 
-<a href="{LINK_ASSINAR}" target="_blank" class="btn-assinar">
-ASSINAR AGORA!
-</a>
-
-</div> <!-- FECHA O CARD -->
+</div> <!-- FECHA card-wrapper -->
         """,
         unsafe_allow_html=True,
     )
 
     # ===========================================================
-    # 5. GRÁFICOS (iguais para todas as carteiras)
+    # BOTÃO "ASSINAR AGORA!" (FORA DO CARD)
+    # ===========================================================
+    st.markdown(
+        f"""
+<a href="{LINK_ASSINAR}" target="_blank" class="btn-assinar">
+ASSINAR AGORA!
+</a>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ===========================================================
+    # GRÁFICOS
     # ===========================================================
     c1, c2 = st.columns([1.35, 0.65])
     with c1:
