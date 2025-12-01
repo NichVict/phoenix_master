@@ -38,9 +38,10 @@ def admin_login():
                 ],
             }
             st.success("Login realizado com sucesso!")
-            st.experimental_rerun()
+            st.stop()   # <-- corrigido! sem rerun
         else:
             st.error("Credenciais inválidas.")
+
 
 
 # ============================
