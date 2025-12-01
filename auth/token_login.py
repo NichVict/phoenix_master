@@ -1,5 +1,6 @@
 import streamlit as st
 from supabase import create_client
+import json
 
 # ============================
 # CLIENT DO SUPABASE
@@ -57,10 +58,30 @@ def require_token():
 
     user = user[0]
 
+    # ======================================
+    # CORREÇÃO: transformar carteiras em lista
+    # ======================================
+    carteiras_raw = user.get("carteiras", "[]")
+
+    # Garantir que é sempre uma lista válida
+    try:
+        # Se vier como JSON string → converte
+        if isinstance(carteiras_raw, str):
+            carteiras = json.loads(carteiras_raw)
+        # Se já vier como lista (menos comum) → usa direto
+        elif isinstance(carteiras_raw, list):
+            carteiras = carteiras_raw
+        else:
+            carteiras = []
+    except:
+        carteiras = []
+
+    # ======================================
+
     st.session_state["user"] = {
         "id": user["id"],
         "email": user["email"],
-        "carteiras": user.get("carteiras", []),
+        "carteiras": carteiras,
     }
 
     return st.session_state["user"]
@@ -80,6 +101,7 @@ def require_carteira(nome_carteira):
     if user["email"] == st.secrets.get("ADMIN_EMAIL"):
         return True
 
+    # Validação real: agora funciona corretamente
     if nome_carteira not in user["carteiras"]:
         st.error("🚫 Você não tem acesso a esta carteira.")
         st.stop()
