@@ -741,7 +741,7 @@ def render_carteira(card_data):
     desc = tendencia_text(stats)
 
     # ===========================================================
-    # ABRE O CARD PRINCIPAL
+    # CARD COMEÇA AQUI
     # ===========================================================
     st.markdown(
         f"""
@@ -752,7 +752,6 @@ def render_carteira(card_data):
       <div class="card-title-main">{emoji} {nome}</div>
       <div class="card-tag">Phoenix Strategy · {tag_extra}</div>
     </div>
-
     <div class="score-badge">
       <div class="score-label">Phoenix Score</div>
       <div class="score-value" style="color:{cor_score};">{score}</div>
@@ -767,7 +766,7 @@ def render_carteira(card_data):
     )
 
     # ===========================================================
-    # MÉTRICAS PRINCIPAIS (sempre dentro do card!)
+    # MÉTRICAS PRINCIPAIS (IGUAIS PARA TODAS AS CARTEIRAS)
     # ===========================================================
     st.markdown(
         f"""
@@ -801,7 +800,7 @@ def render_carteira(card_data):
     )
 
     # ===========================================================
-    # MÉTRICAS ESPECIAIS PARA OPÇÕES (DENTRO DO CARD)
+    # MÉTRICAS ESPECIAIS — APENAS PARA OPÇÕES
     # ===========================================================
     if card_data["id"] == "OPCOES":
 
@@ -843,7 +842,7 @@ def render_carteira(card_data):
         )
 
     # ===========================================================
-    # MÉTRICAS DAS AÇÕES (DENTRO DO CARD)
+    # MÉTRICAS DAS AÇÕES (IBOV, BDR, SMLL)
     # ===========================================================
     else:
         st.markdown(
@@ -880,13 +879,13 @@ def render_carteira(card_data):
         f"""
 <div class="card-desc">{desc}</div>
 
-</div>  <!-- AQUI FECHA O CARD PRINCIPAL -->
+</div> <!-- FECHA card-wrapper -->
         """,
         unsafe_allow_html=True,
     )
 
     # ===========================================================
-    # BOTÃO FORA DO CARD (agora ok)
+    # BOTÃO "ASSINAR AGORA!" (FORA DO CARD)
     # ===========================================================
     st.markdown(
         f"""
@@ -898,7 +897,7 @@ ASSINAR AGORA!
     )
 
     # ===========================================================
-    # GRÁFICOS (fora do card)
+    # GRÁFICOS
     # ===========================================================
     c1, c2 = st.columns([1.35, 0.65])
     with c1:
@@ -913,6 +912,7 @@ ASSINAR AGORA!
         st.markdown("##### 📊 Trades ativos")
         fig_bar = barras_pend_andamento(resumo_estado)
         st.plotly_chart(fig_bar, use_container_width=True)
+
 
 
 # ===========================
