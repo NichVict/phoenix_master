@@ -550,6 +550,70 @@ def build_stats_opcoes_30d():
     }
 
 
+def load_opcoes_abertas():
+    """
+    Retorna todas as operações de opções com status = 'aberta'
+    diretamente da tabela opcoes_operacoes.
+    """
+    q = "?select=symbol,retorno_atual_pct,status&status=eq.aberta"
+    dados = supabase_select_opcoes(q) or []
+    return dados
+
+def best_trade_opcoes(stats):
+    """
+    A partir do stats (que já contém sparkline + pnl_pct),
+    extraímos a operação mais lucrativa.
+    """
+    if not stats["has_data"] or not stats["qtd_trades"]:
+        return None
+
+    # sparkline contém: {"data": ..., "pct": valor}
+    # Vamos ter que pegar o ticker junto
+    # Portanto refazemos a consulta com select de ticker + pnl_pct
+    hoje = datetime.date.today()
+    inicio_30d = hoje - datetime.timedelta(days=30)
+
+    q = (
+        f"?select=symbol,preco_entrada,preco_saida,retorno_final_pct,"
+        f"timestamp_saida,status"
+        f"&status=eq.encerrada"
+        f"&timestamp_saida=gte.{inicio_30d}T00:00:00"
+        f"&timestamp_saida=lte.{hoje}T23:59:59"
+    )
+
+    dados = supabase_select_opcoes(q) or []
+
+    if not dados:
+        return None
+
+    # calcular corretamento pnl_pct
+    df = pd.DataFrame(dados)
+
+    if "retorno_final_pct" in df.columns:
+        df["pnl_pct"] = pd.to_numeric(df["retorno_final_pct"], errors="coerce").fillna(0.0)
+    else:
+        df["preco_entrada"] = pd.to_numeric(df.get("preco_entrada"), errors="coerce")
+        df["preco_saida"] = pd.to_numeric(df.get("preco_saida"), errors="coerce")
+        df["pnl_pct"] = (
+            (df["preco_saida"] - df["preco_entrada"]) /
+            df["preco_entrada"]
+        ).fillna(0.0) * 100.0
+
+    df = df.dropna(subset=["pnl_pct"])
+
+    if df.empty:
+        return None
+
+    row = df.sort_values("pnl_pct", ascending=False).iloc[0]
+
+    return {
+        "ticker": row.get("symbol"),
+        "pnl_pct": float(row.get("pnl_pct", 0.0)),
+    }
+
+
+
+
 # ===========================
 # 🔥 PHOENIX SCORE
 # ===========================
@@ -663,6 +727,7 @@ def render_carteira(card_data):
     score = card_data["score"]
     cor_score = score_color(score)
 
+    # estatísticas gerais
     if stats["has_data"]:
         winrate_pct = stats["winrate"] * 100.0
         media_pct = stats["media_pct"]
@@ -676,6 +741,9 @@ def render_carteira(card_data):
 
     desc = tendencia_text(stats)
 
+    # ===========================================================
+    # 1. CABEÇALHO DO CARD
+    # ===========================================================
     st.markdown(
         f"""<div class="card-wrapper">
 <div class="card-header">
@@ -691,8 +759,64 @@ def render_carteira(card_data):
     </div>
   </div>
 </div>
+""",
+        unsafe_allow_html=True,
+    )
 
+    # ===========================================================
+    # 2. MÉTRICAS — CASO SEJA CARTEIRA DE OPÇÕES
+    # ===========================================================
+    if card_data["id"] == "OPCOES":
+
+        # total de operações encerradas (30 dias)
+        total_operacoes = stats["qtd_trades"]
+
+        # operações abertas
+        abertas = load_opcoes_abertas()
+        qtd_abertas = len(abertas)
+
+        # operação mais lucrativa
+        melhor_op = best_trade_opcoes(stats)
+        if melhor_op:
+            melhor_label = f"{melhor_op['ticker']} ({melhor_op['pnl_pct']:.1f}%)"
+        else:
+            melhor_label = "—"
+
+        st.markdown(
+            f"""
 <div class="metrics-grid">
+
+  <div class="metric-box">
+    <div class="metric-label">TOTAL DE OPERAÇÕES</div>
+    <div class="metric-value">{total_operacoes}</div>
+    <div class="metric-sub">últimos 30 dias</div>
+  </div>
+
+  <div class="metric-box">
+    <div class="metric-label">EM ANDAMENTO</div>
+    <div class="metric-value">{qtd_abertas}</div>
+    <div class="metric-sub">posições abertas</div>
+  </div>
+
+  <div class="metric-box">
+    <div class="metric-label">OP. MAIS LUCRATIVA</div>
+    <div class="metric-value">{melhor_label}</div>
+    <div class="metric-sub">últimos 30 dias</div>
+  </div>
+
+</div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    # ===========================================================
+    # 3. MÉTRICAS — CARTEIRAS DE AÇÕES (IBOV, BDR, SMLL)
+    # ===========================================================
+    else:
+        st.markdown(
+            f"""
+<div class="metrics-grid">
+
   <div class="metric-box">
     <div class="metric-label">Lucro total 30d</div>
     <div class="metric-value" style="color:{('#22c55e' if lucro_total_pct>=0 else '#ef4444')};">
@@ -732,18 +856,31 @@ def render_carteira(card_data):
     <div class="metric-value">{resumo_estado['total']}</div>
     <div class="metric-sub">ativos sob vigilância</div>
   </div>
-</div>
 
+</div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    # ===========================================================
+    # 4. DESCRIÇÃO
+    # ===========================================================
+    st.markdown(
+        f"""
 <div class="card-desc">{desc}</div>
 
 <a href="{LINK_ASSINAR}" target="_blank" class="btn-assinar">
 ASSINAR AGORA!
 </a>
-</div>
-""",
+
+</div> <!-- FECHA O CARD -->
+        """,
         unsafe_allow_html=True,
     )
 
+    # ===========================================================
+    # 5. GRÁFICOS (iguais para todas as carteiras)
+    # ===========================================================
     c1, c2 = st.columns([1.35, 0.65])
     with c1:
         fig_spark = sparkline_figure(stats)
@@ -752,10 +889,12 @@ ASSINAR AGORA!
             st.plotly_chart(fig_spark, use_container_width=True)
         else:
             st.info("Ainda não há operações encerradas suficientes para esta carteira.")
+
     with c2:
         st.markdown("##### 📊 Trades ativos")
         fig_bar = barras_pend_andamento(resumo_estado)
         st.plotly_chart(fig_bar, use_container_width=True)
+
 
 # ===========================
 # 🔢 MONTAGEM DOS DADOS DAS CARTEIRAS
