@@ -741,7 +741,7 @@ def render_carteira(card_data):
     desc = tendencia_text(stats)
 
     # ===========================================================
-    # CARD COMEÇA AQUI
+    # ABRE O CARD PRINCIPAL
     # ===========================================================
     st.markdown(
         f"""
@@ -752,6 +752,7 @@ def render_carteira(card_data):
       <div class="card-title-main">{emoji} {nome}</div>
       <div class="card-tag">Phoenix Strategy · {tag_extra}</div>
     </div>
+
     <div class="score-badge">
       <div class="score-label">Phoenix Score</div>
       <div class="score-value" style="color:{cor_score};">{score}</div>
@@ -766,7 +767,7 @@ def render_carteira(card_data):
     )
 
     # ===========================================================
-    # MÉTRICAS PRINCIPAIS (IGUAIS PARA TODAS AS CARTEIRAS)
+    # MÉTRICAS PRINCIPAIS (sempre dentro do card!)
     # ===========================================================
     st.markdown(
         f"""
@@ -800,7 +801,7 @@ def render_carteira(card_data):
     )
 
     # ===========================================================
-    # MÉTRICAS ESPECIAIS — APENAS PARA OPÇÕES
+    # MÉTRICAS ESPECIAIS PARA OPÇÕES (DENTRO DO CARD)
     # ===========================================================
     if card_data["id"] == "OPCOES":
 
@@ -842,7 +843,7 @@ def render_carteira(card_data):
         )
 
     # ===========================================================
-    # MÉTRICAS DAS AÇÕES (IBOV, BDR, SMLL)
+    # MÉTRICAS DAS AÇÕES (DENTRO DO CARD)
     # ===========================================================
     else:
         st.markdown(
@@ -879,13 +880,13 @@ def render_carteira(card_data):
         f"""
 <div class="card-desc">{desc}</div>
 
-</div> <!-- FECHA card-wrapper -->
+</div>  <!-- AQUI FECHA O CARD PRINCIPAL -->
         """,
         unsafe_allow_html=True,
     )
 
     # ===========================================================
-    # BOTÃO "ASSINAR AGORA!" (FORA DO CARD)
+    # BOTÃO FORA DO CARD (agora ok)
     # ===========================================================
     st.markdown(
         f"""
@@ -897,7 +898,7 @@ ASSINAR AGORA!
     )
 
     # ===========================================================
-    # GRÁFICOS
+    # GRÁFICOS (fora do card)
     # ===========================================================
     c1, c2 = st.columns([1.35, 0.65])
     with c1:
