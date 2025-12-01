@@ -1,6 +1,5 @@
 import streamlit as st
 
-# CONFIGURAÇÃO OBRIGATÓRIA ANTES DE QUALQUER IMPORT PESADO
 st.set_page_config(
     page_title="Fênix Premium",
     page_icon="🦅",
@@ -10,7 +9,7 @@ st.set_page_config(
 from auth.token_login import require_token
 from bp.ui.streamlit_dashboard import render_dashboard
 
-# PROTEGER APP
+# Autenticar pelo token
 require_token()
 
 def main():
