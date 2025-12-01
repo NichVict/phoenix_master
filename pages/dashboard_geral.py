@@ -539,8 +539,12 @@ def sparkline_figure(stats):
     df = pd.DataFrame(stats["sparkline"])
     df = df.sort_values("data")
 
-    # ===== SUAVIZAÇÃO (WINDOW = 3) =====
-    df["pct_smooth"] = df["pct"].rolling(window=3, min_periods=1).mean()
+    # ===== SUAVIZAÇÃO =====
+    # Média móvel mais forte
+    df["pct_smooth"] = df["pct"].rolling(window=5, min_periods=1).mean()
+
+    # Interpolação adicional para suavizar
+    df["pct_smooth"] = df["pct_smooth"].interpolate(method="cubic")
 
     fig = go.Figure()
     fig.add_trace(
@@ -548,7 +552,7 @@ def sparkline_figure(stats):
             x=df["data"],
             y=df["pct_smooth"],
             mode="lines",
-            line=dict(width=3),  # linha mais uniforme
+            line=dict(width=3),
         )
     )
 
@@ -561,6 +565,7 @@ def sparkline_figure(stats):
         yaxis=dict(title="Retorno (%)", showgrid=True),
     )
     return fig
+
 
 
 def barras_lucro_prejuizo(stats):
@@ -579,9 +584,11 @@ def barras_lucro_prejuizo(stats):
     fig.add_trace(
         go.Bar(
             x=["Média Prejuízo", "Média Lucro"],
-            y=[media_prejuizo, media_lucro],
-            text=[f"{media_prejuizo:.2f}%", f"{media_lucro:.2f}%"],
+            y=[-abs(media_prejuizo), media_lucro],
+            text=[f"-{abs(media_prejuizo):.2f}%", f"{media_lucro:.2f}%"],
             textposition="outside",
+            textfont=dict(size=14),
+
         )
     )
 
