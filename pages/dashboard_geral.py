@@ -31,7 +31,7 @@ border-radius: 18px;
 border: 1px solid rgba(148,163,184,0.45);
 padding: 22px 22px 18px 22px;
 box-shadow: 0 0 18px rgba(0,0,0,0.65);
-margin-bottom: 22px;
+margin-bottom: 28px;
 }
 
 .card-header {
@@ -149,9 +149,64 @@ box-shadow:0 0 14px rgba(248,113,113,0.8);
 
 .charts-row {
 display:grid;
-grid-template-columns: 1.2fr .8fr;
+grid-template-columns: 1.3fr .7fr;
 gap:12px;
 margin-top:10px;
+}
+
+.rank-box {
+background: rgba(15,23,42,0.95);
+border-radius:14px;
+padding:16px 18px;
+border:1px solid rgba(75,85,99,0.9);
+margin-top:6px;
+}
+
+.rank-title {
+font-size:18px;
+font-weight:700;
+color:#e5e7eb;
+margin-bottom:8px;
+}
+
+.rank-line {
+font-size:13px;
+color:#d1d5db;
+margin:2px 0;
+}
+
+.rank-tag {
+font-size:11px;
+text-transform:uppercase;
+color:#9ca3af;
+}
+
+.global-score-wrap {
+background: radial-gradient(circle at top left, #111827, #020617);
+border-radius:18px;
+border:1px solid rgba(148,163,184,0.6);
+padding:18px 20px;
+margin-top:18px;
+box-shadow:0 0 20px rgba(0,0,0,0.75);
+}
+
+.global-score-value {
+font-size:32px;
+font-weight:900;
+}
+
+.global-score-bar-outer {
+margin-top:10px;
+width:100%;
+height:10px;
+border-radius:999px;
+background:#020617;
+overflow:hidden;
+}
+
+.global-score-bar-inner {
+height:100%;
+border-radius:999px;
 }
 </style>
 """,
@@ -176,7 +231,7 @@ distribuição de trades e um <b>Phoenix Score</b> para cada estratégia.
 )
 
 # ===========================
-# 🔍 RESUMO DE CARTEIRA (PENDENTES / ANDAMENTO)
+# 🔍 RESUMO ESTADO (PENDENTES / ANDAMENTO)
 # ===========================
 def resumo_carteira_estado(indice: str):
     pend = [a for a in curto_state.ativos if get_indice_ativo(a) == indice]
@@ -188,14 +243,21 @@ def resumo_carteira_estado(indice: str):
     }
 
 # ===========================
-# 📊 CARREGA MÉTRICAS 30 DIAS DO SUPABASE
+# 📊 30 DIAS – SUPABASE
 # ===========================
-def load_stats_30d(indice_atual: str):
-    """
-    Replica a lógica principal do render_resumo_30d, mas retornando os dados
-    em vez de desenhar a UI.
-    """
-    # Opções ainda não estão em operacoes_encerradas -> devolve sem dados
+def load_ops_30d():
+    hoje = datetime.date.today()
+    inicio_30d = hoje - datetime.timedelta(days=30)
+    dados = supabase_select(
+        "operacoes_encerradas",
+        f"?select=*"
+        f"&data_fechamento=gte.{inicio_30d}T00:00:00"
+        f"&data_fechamento=lte.{hoje}T23:59:59",
+    ) or []
+    return dados
+
+def build_stats_for_indice(dados_gerais, indice_atual: str):
+    # opções podem não estar nessa tabela
     if indice_atual == "OPCOES":
         return {
             "has_data": False,
@@ -206,56 +268,24 @@ def load_stats_30d(indice_atual: str):
             "sparkline": [],
         }
 
-    hoje = datetime.date.today()
-    inicio_30d = hoje - datetime.timedelta(days=30)
-
-    dados_30d = supabase_select(
-        "operacoes_encerradas",
-        f"?select=*"
-        f"&data_fechamento=gte.{inicio_30d}T00:00:00"
-        f"&data_fechamento=lte.{hoje}T23:59:59",
-    ) or []
-
-    # --- filtro por carteira (mesma ideia do Dash_Acoes)
-    def filtrar_por_indice(lista, indice):
-        if indice == "TOTAL":
-            return lista
-        out = []
-        for x in lista:
-            idx = (
-                x.get("indice")
-                or x.get("carteira")
-                or x.get("index")
-                or x.get("indice_ticker")
-            )
-            idx_norm = get_indice_ativo({"indice": idx})
-            if idx_norm == indice:
-                out.append(x)
-        return out
-
-    dados_30d_filtrado = filtrar_por_indice(dados_30d, indice_atual)
-
-    # converter datas
-    for x in dados_30d_filtrado:
-        try:
-            x["data_fechamento"] = datetime.datetime.fromisoformat(
-                x["data_fechamento"]
-            )
-        except Exception:
-            pass
+    filtrados = [x for x in dados_gerais if (x.get("indice") or "").upper() == indice_atual.upper()]
 
     pontos_pct = []
-    for x in dados_30d_filtrado:
+    for x in filtrados:
         pnl = x.get("pnl")
         preco_abertura = x.get("preco_abertura")
+        data_raw = x.get("data_fechamento")
+        try:
+            data_dt = datetime.datetime.fromisoformat(data_raw) if isinstance(data_raw, str) else data_raw
+        except Exception:
+            data_dt = None
+
         if pnl is not None and preco_abertura:
-            pct = (pnl / preco_abertura) * 100.0
-            pontos_pct.append(
-                {
-                    "data": x.get("data_fechamento"),
-                    "pct": pct,
-                }
-            )
+            try:
+                pct = (float(pnl) / float(preco_abertura)) * 100.0
+            except Exception:
+                pct = 0.0
+            pontos_pct.append({"data": data_dt, "pct": pct})
 
     if not pontos_pct:
         return {
@@ -267,12 +297,10 @@ def load_stats_30d(indice_atual: str):
             "sparkline": [],
         }
 
-    # ordena por data
     pontos_pct = sorted(
         pontos_pct,
         key=lambda d: d["data"] or datetime.datetime.min,
     )
-
     valores = [p["pct"] for p in pontos_pct]
     lucro_total_pct = sum(valores)
     media_pct = sum(valores) / len(valores)
@@ -293,16 +321,7 @@ def load_stats_30d(indice_atual: str):
 # 🔥 PHOENIX SCORE
 # ===========================
 def phoenix_score(stats, resumo_estado):
-    """
-    Score 0–100 baseado em:
-      - lucro_total_pct
-      - média pct por trade
-      - winrate
-      - quantidade de trades recentes
-      - atividade atual (pendentes/andamento)
-    """
     if not stats["has_data"]:
-        # sem histórico recente -> score moderado, depende da atividade
         base = 40.0
         bonus_atividade = min(resumo_estado["total"] * 2.5, 20.0)
         score = base + bonus_atividade
@@ -315,14 +334,13 @@ def phoenix_score(stats, resumo_estado):
 
         comp_lucro = max(min(lt / 5.0, 30.0), -20.0)
         comp_media = max(min(media * 0.8, 25.0), -15.0)
-        comp_win = (win - 0.5) * 80.0  # -40 a +40 aproximadamente
+        comp_win = (win - 0.5) * 80.0
         comp_trades = min(trades * 2.0, 20.0)
         comp_ativos = min(ativos * 1.5, 15.0)
 
         score = 50.0 + comp_lucro + comp_media + comp_win + comp_trades + comp_ativos
 
-    score = max(0.0, min(100.0, score))
-    return round(score, 1)
+    return max(0.0, min(100.0, round(score, 1)))
 
 def score_color(score: float):
     if score >= 80:
@@ -335,20 +353,20 @@ def score_color(score: float):
 
 def tendencia_text(stats):
     if not stats["has_data"]:
-        return "Sem histórico recente suficiente."
+        return "Sem histórico recente suficiente. A carteira está em construção."
     m = stats["media_pct"]
     if m > 2.0:
-        return "Tendência forte de ganhos nas últimas operações."
+        return "Tendência forte de ganhos nas últimas operações, com alta assimetria positiva."
     if m > 0.5:
-        return "Tendência levemente positiva, com ganhos consistentes."
+        return "Tendência levemente positiva, com ganhos consistentes e risco controlado."
     if m > -0.5:
-        return "Carteira estável, sem viés forte de ganho ou perda."
+        return "Carteira estável, sem viés forte de ganho ou perda, ideal para quem busca equilíbrio."
     if m > -2.0:
-        return "Pressão vendedora moderada nas últimas operações."
-    return "Perdas relevantes recentemente — exige maior disciplina de risco."
+        return "Pressão vendedora moderada nas últimas operações — gestão de risco é essencial."
+    return "Perdas relevantes recentemente — exige disciplina absoluta e uso rigoroso de stops."
 
 # ===========================
-# 📊 CRIADORES DE GRÁFICOS
+# 📊 GRÁFICOS
 # ===========================
 def sparkline_figure(stats):
     if not stats["has_data"] or not stats["sparkline"]:
@@ -401,12 +419,15 @@ def barras_pend_andamento(resumo_estado):
     return fig
 
 # ===========================
-# 🧱 RENDERIZA UM BLOCO COMPLETO DE CARTEIRA
+# 🧱 SUPER CARD DE CARTEIRA (1 COLUNA)
 # ===========================
-def render_carteira(nome, emoji_cor, indice_key, tag_extra):
-    resumo_estado = resumo_carteira_estado(indice_key)
-    stats = load_stats_30d(indice_key)
-    score = phoenix_score(stats, resumo_estado)
+def render_carteira(card_data):
+    nome = card_data["nome"]
+    emoji = card_data["emoji"]
+    tag_extra = card_data["tag"]
+    resumo_estado = card_data["resumo"]
+    stats = card_data["stats"]
+    score = card_data["score"]
     cor_score = score_color(score)
 
     if stats["has_data"]:
@@ -426,7 +447,7 @@ def render_carteira(nome, emoji_cor, indice_key, tag_extra):
         f"""<div class="card-wrapper">
 <div class="card-header">
   <div class="card-title-left">
-    <div class="card-title-main">{emoji_cor} {nome}</div>
+    <div class="card-title-main">{emoji} {nome}</div>
     <div class="card-tag">Phoenix Strategy · {tag_extra}</div>
   </div>
   <div class="score-badge">
@@ -490,38 +511,204 @@ ASSINAR AGORA!
         unsafe_allow_html=True,
     )
 
-    # ---- linha com dois gráficos ----
-    charts = st.container()
-    with charts:
-        c1, c2 = st.columns([1.3, 0.7])
-        with c1:
-            fig_spark = sparkline_figure(stats)
-            if fig_spark:
-                st.markdown("##### 📈 Performance recente (30d)")
-                st.plotly_chart(fig_spark, use_container_width=True)
-            else:
-                st.markdown("##### 📈 Performance recente (30d)")
-                st.info("Ainda não há operações encerradas suficientes para esta carteira.")
-        with c2:
-            fig_bar = barras_pend_andamento(resumo_estado)
-            st.markdown("##### 📊 Trades ativos")
-            st.plotly_chart(fig_bar, use_container_width=True)
+    c1, c2 = st.columns([1.35, 0.65])
+    with c1:
+        fig_spark = sparkline_figure(stats)
+        st.markdown("##### 📈 Performance recente (30d)")
+        if fig_spark:
+            st.plotly_chart(fig_spark, use_container_width=True)
+        else:
+            st.info("Ainda não há operações encerradas suficientes para esta carteira.")
+    with c2:
+        st.markdown("##### 📊 Trades ativos")
+        fig_bar = barras_pend_andamento(resumo_estado)
+        st.plotly_chart(fig_bar, use_container_width=True)
 
 # ===========================
-# 🧱 LAYOUT 2x2 — 4 CARTEIRAS
+# 🔢 MONTAGEM DOS DADOS DAS CARTEIRAS
 # ===========================
-col1, col2 = st.columns(2)
+dados_30d_geral = load_ops_30d()
 
-with col1:
-    render_carteira("Carteira IBOV", "🟦", "IBOV", "Large Caps Brasil")
+carteiras_cfg = [
+    {"id": "IBOV", "nome": "Carteira IBOV", "emoji": "🟦", "tag": "Large Caps Brasil"},
+    {"id": "BDR", "nome": "Carteira BDR", "emoji": "🟨", "tag": "Exposição Internacional"},
+    {"id": "SMLL", "nome": "Small Caps", "emoji": "🟩", "tag": "Agressiva · Crescimento"},
+    {"id": "OPCOES", "nome": "Carteira de Opções", "emoji": "🟪", "tag": "Estratégias Assimétricas"},
+]
 
-with col2:
-    render_carteira("Carteira BDR", "🟨", "BDR", "Exposição Internacional")
+cards_data = []
+for cfg in carteiras_cfg:
+    resumo = resumo_carteira_estado(cfg["id"])
+    stats = build_stats_for_indice(dados_30d_geral, cfg["id"])
+    score = phoenix_score(stats, resumo)
+    cards_data.append(
+        {
+            "id": cfg["id"],
+            "nome": cfg["nome"],
+            "emoji": cfg["emoji"],
+            "tag": cfg["tag"],
+            "resumo": resumo,
+            "stats": stats,
+            "score": score,
+        }
+    )
 
-col3, col4 = st.columns(2)
+# ===========================
+# 📦 RENDERIZA CADA CARTEIRA (1 COLUNA)
+# ===========================
+for card in cards_data:
+    render_carteira(card)
 
-with col3:
-    render_carteira("Small Caps", "🟩", "SMLL", "Agressiva / Crescimento")
+# ===========================
+# 🏆 RANKING + TOP TRADES + SCORE GLOBAL (RODAPÉ)
+# ===========================
+st.markdown("---")
+st.markdown("## 🏆 Ranking Phoenix — Últimos 30 dias")
 
-with col4:
-    render_carteira("Carteira de Opções", "🟪", "OPCOES", "Estratégias Assimétricas")
+# ranking por score
+rank_score = sorted(cards_data, key=lambda c: c["score"], reverse=True)
+
+best_score = rank_score[0]
+st.markdown(
+    f"<div class='rank-box'><div class='rank-title'>🥇 Melhor carteira geral: {best_score['emoji']} {best_score['nome']}</div>"
+    f"<div class='rank-line'><span class='rank-tag'>Phoenix Score</span> {best_score['score']}</div>"
+    f"</div>",
+    unsafe_allow_html=True,
+)
+
+# ranking por lucro total
+rank_lucro = sorted(
+    cards_data,
+    key=lambda c: c["stats"]["lucro_total_pct"],
+    reverse=True,
+)
+
+best_lucro = rank_lucro[0]
+st.markdown(
+    f"<div class='rank-box'>"
+    f"<div class='rank-title'>📈 Carteira com maior lucro 30d: {best_lucro['emoji']} {best_lucro['nome']}</div>"
+    f"<div class='rank-line'><span class='rank-tag'>Lucro total 30d</span> {best_lucro['stats']['lucro_total_pct']:.1f}%</div>"
+    f"</div>",
+    unsafe_allow_html=True,
+)
+
+# ranking por winrate
+rank_win = sorted(
+    cards_data,
+    key=lambda c: c['stats']['winrate'],
+    reverse=True,
+)
+
+best_win = rank_win[0]
+st.markdown(
+    f"<div class='rank-box'>"
+    f"<div class='rank-title'>🎯 Melhor winrate 30d: {best_win['emoji']} {best_win['nome']}</div>"
+    f"<div class='rank-line'><span class='rank-tag'>Winrate</span> {(best_win['stats']['winrate']*100.0):.1f}%</div>"
+    f"</div>",
+    unsafe_allow_html=True,
+)
+
+# ===========================
+# 💹 TOP TRADES 30d
+# ===========================
+st.markdown("### 🔝 Top Trades (30 dias)")
+
+def enrich_ops_with_pct(dados):
+    out = []
+    for x in dados:
+        pnl = x.get("pnl")
+        preco_abertura = x.get("preco_abertura")
+        if pnl is None or not preco_abertura:
+            continue
+        try:
+            pct = (float(pnl) / float(preco_abertura)) * 100.0
+        except Exception:
+            pct = 0.0
+        out.append(
+            {
+                "ticker": x.get("ticker"),
+                "indice": x.get("indice"),
+                "pnl_pct": pct,
+                "pnl": x.get("pnl"),
+                "data_fechamento": x.get("data_fechamento"),
+            }
+        )
+    return out
+
+enriched = enrich_ops_with_pct(dados_30d_geral)
+
+if not enriched:
+    st.info("Ainda não há operações encerradas suficientes para montar o ranking de trades.")
+else:
+    melhores = sorted(enriched, key=lambda x: x["pnl_pct"], reverse=True)[:3]
+    piores = sorted(enriched, key=lambda x: x["pnl_pct"])[:3]
+
+    col_melhor, col_pior = st.columns(2)
+
+    with col_melhor:
+        st.markdown("#### 🥇 Top 3 trades mais lucrativos")
+        df_best = pd.DataFrame(
+            [
+                {
+                    "Ticker": t["ticker"],
+                    "Carteira": t["indice"],
+                    "Retorno (%)": round(t["pnl_pct"], 2),
+                    "PnL (R$)": round(float(t["pnl"] or 0.0), 2),
+                }
+                for t in melhores
+            ]
+        )
+        st.dataframe(df_best, use_container_width=True, hide_index=True)
+
+    with col_pior:
+        st.markdown("#### ⚠️ Top 3 trades com maior perda")
+        df_worst = pd.DataFrame(
+            [
+                {
+                    "Ticker": t["ticker"],
+                    "Carteira": t["indice"],
+                    "Retorno (%)": round(t["pnl_pct"], 2),
+                    "PnL (R$)": round(float(t["pnl"] or 0.0), 2),
+                }
+                for t in piores
+            ]
+        )
+        st.dataframe(df_worst, use_container_width=True, hide_index=True)
+
+# ===========================
+# 🦅 PHOENIX SCORE GLOBAL — RODAPÉ
+# ===========================
+st.markdown("## 🦅 Phoenix Score Global")
+
+def compute_global_score(cards):
+    pesos = []
+    valores = []
+    for c in cards:
+        trades = c["stats"]["qtd_trades"]
+        if trades <= 0:
+            continue
+        pesos.append(trades)
+        valores.append(c["score"])
+    if not pesos:
+        # fallback: média simples
+        if not cards:
+            return 50.0
+        return sum(c["score"] for c in cards) / len(cards)
+    total_peso = sum(pesos)
+    score = sum(v * p for v, p in zip(valores, pesos)) / total_peso
+    return round(score, 1)
+
+global_score = compute_global_score(cards_data)
+cor_global = score_color(global_score)
+
+st.markdown(
+    f"<div class='global-score-wrap'>"
+    f"<div class='rank-title'>Força consolidada do Phoenix nos últimos 30 dias</div>"
+    f"<div class='global-score-value' style='color:{cor_global};'>{global_score}</div>"
+    f"<div class='global-score-bar-outer'>"
+    f"<div class='global-score-bar-inner' style='width:{global_score}%;background:{cor_global};'></div>"
+    f"</div>"
+    f"<div class='rank-line'>Score ponderado pelas operações fechadas de todas as carteiras.</div>"
+    f"</div>",
+    unsafe_allow_html=True,
+)
