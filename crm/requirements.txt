@@ -1,5 +1,0 @@
-streamlit
-supabase
-python-dotenv
-pandas
-pyTelegramBotAPI
