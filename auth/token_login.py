@@ -1,6 +1,7 @@
 import streamlit as st
 from supabase import create_client
 
+# ADMINISTRADORES COM ACESSO TOTAL
 ADMINS = ["xande5@hotmail.com"]
 
 # ============================
@@ -22,7 +23,7 @@ def require_token():
         st.error("Você precisa acessar pelo link enviado por e-mail.")
         st.stop()
 
-    supabase = get_client()  # <<< CLIENTE CRIADO NA HORA
+    supabase = get_client()
 
     res = (
         supabase.table("clientes")
@@ -38,11 +39,23 @@ def require_token():
 
     user = user[0]
 
+    # Sessão base
     st.session_state["user"] = {
         "id": user["id"],
         "email": user["email"],
         "carteiras": user.get("carteiras", []),
     }
+
+    # =============================
+    #   ADMIN TEM ACESSO TOTAL 🔥
+    # =============================
+    if user["email"] in ADMINS:
+        st.session_state["user"]["carteiras"] = [
+            "Carteira de Ações IBOV",
+            "Carteira de BDRs",
+            "Carteira de Small Caps",
+            "Carteira de Opções"
+        ]
 
     return st.session_state["user"]
 
@@ -57,6 +70,7 @@ def require_carteira(nome_carteira):
         st.error("Sessão expirada. Acesse novamente pelo link do e-mail.")
         st.stop()
 
+    # Se não tiver carteira e não for admin → bloqueia
     if nome_carteira not in user["carteiras"] and user["email"] not in ADMINS:
         st.error("🚫 Você não tem acesso a esta carteira.")
         st.stop()
