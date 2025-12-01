@@ -1,8 +1,15 @@
 import streamlit as st
-from crm.clientes import listar_clientes
+from crm.clientes import *  # backend
 
-st.title("CRM - Clientes")
+st.set_page_config(page_title="CRM – Clientes", layout="wide")
 
-clientes = listar_clientes()
-st.write(clientes)
+st.title("👥 CRM – Clientes")
+
+st.subheader("Lista de Clientes")
+
+try:
+    clientes = listar_clientes() if 'listar_clientes' in globals() else []
+    st.table(clientes)
+except Exception as e:
+    st.error(f"Erro ao carregar clientes: {e}")
 
