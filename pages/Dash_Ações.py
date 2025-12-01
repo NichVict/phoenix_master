@@ -37,24 +37,7 @@ import logging
 SUPABASE_URL_CLIENTES = st.secrets.get("supabase_url_clientes", "")
 SUPABASE_KEY_CLIENTES = st.secrets.get("supabase_key_clientes", "")
 
-# ============================
-# 🔐 PROTEÇÃO PARA ADMIN
-# ============================
 
-
-# Se não há usuário carregado → bloqueia
-if "user" not in st.session_state:
-    st.error("Sessão expirada. Faça login como administrador.")
-    st.stop()
-
-# Se o e-mail do usuário NÃO é o do admin → bloqueia
-if st.session_state["user"]["email"] != st.secrets.get("ADMIN_EMAIL"):
-    st.error("🚫 Acesso restrito ao administrador.")
-    st.stop()
-
-# ---- DAQUI PRA BAIXO É A LÓGICA NORMAL DA PÁGINA ----
-
-# Se chegou aqui → ADMIN OK (liberado)
 
 def salvar_lead_dashboard(nome: str, email: str, telefone: str) -> tuple[bool, str]:
     """
