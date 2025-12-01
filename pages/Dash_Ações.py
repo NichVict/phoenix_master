@@ -37,6 +37,13 @@ import logging
 SUPABASE_URL_CLIENTES = st.secrets.get("supabase_url_clientes", "")
 SUPABASE_KEY_CLIENTES = st.secrets.get("supabase_key_clientes", "")
 
+# 🔐 ===== PROTEÇÃO DA PÁGINA ADMIN =====
+from auth.token_login import require_token
+
+user = require_token()
+if user["email"] != st.secrets.get("ADMIN_EMAIL"):
+    st.error("🚫 Acesso restrito ao administrador.")
+    st.stop()
 
 def salvar_lead_dashboard(nome: str, email: str, telefone: str) -> tuple[bool, str]:
     """
