@@ -6,9 +6,10 @@ import json
 # CLIENT DO SUPABASE
 # ============================
 def get_client():
-    url = st.secrets["SUPABASE_URL"]
-    key = st.secrets["SUPABASE_KEY"]
+    url = st.secrets["SUPABASE_URL_CLIENTES"]
+    key = st.secrets["SUPABASE_KEY_CLIENTES"]
     return create_client(url, key)
+
 
 
 # ============================
