@@ -35,11 +35,21 @@ import fenix_opcoes.supabase_ops as supabase_ops_mod
 
 from auth.token_login import require_token
 
-# 🔐 Apenas Admin pode acessar
-user = require_token()
-if user["email"] != st.secrets.get("ADMIN_EMAIL"):
+# ============================
+# 🔐 PROTEÇÃO PARA ADMIN
+# ============================
+
+# Se não há sessão → bloqueia
+if "user" not in st.session_state:
+    st.error("Sessão expirada. Acesse novamente.")
+    st.stop()
+
+# Se ADMIN_BYPASS está OFF → bloqueia
+if str(st.secrets.get("ADMIN_BYPASS", "FALSE")).upper() != "TRUE":
     st.error("🚫 Acesso restrito ao administrador.")
     st.stop()
+
+# Se chegou aqui → ADMIN OK (liberado)
 
 # ===============================
 
