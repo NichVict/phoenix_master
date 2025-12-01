@@ -25,6 +25,7 @@ def admin_login():
         admin_pass = st.secrets.get("ADMIN_PASSWORD", "")
 
         if user_input == admin_user and pwd_input == admin_pass:
+
             st.session_state["user"] = {
                 "id": "admin",
                 "email": st.secrets.get("ADMIN_EMAIL", ""),
@@ -37,10 +38,16 @@ def admin_login():
                     "Dashboard Geral",
                 ],
             }
+
+            # 👇 AQUI ESTÁ A CHAVE
+            st.session_state["admin_logged"] = True
+
             st.success("Login realizado com sucesso!")
-            st.stop()   # <-- corrigido! sem rerun
+            st.experimental_rerun()
+
         else:
             st.error("Credenciais inválidas.")
+
 
 
 
@@ -50,6 +57,10 @@ def admin_login():
 def require_token():
     params = st.experimental_get_query_params()
     token = params.get("token", [None])[0]
+
+    # 👇 NOVO BLOCO — ADMIN JÁ LOGADO
+    if st.session_state.get("admin_logged"):
+        return st.session_state["user"]
 
     # ============================
     # SEM TOKEN → LOGIN ADMIN
