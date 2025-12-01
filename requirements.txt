@@ -27,7 +27,10 @@ schedule
 lxml
 scipy
 tenacity
-supabase
+
+# --- SUPABASE AUTH (VERSÃO ESTÁVEL) ---
+supabase==1.0.3
+gotrue==1.0.1
 psycopg2-binary
 
 # --- PDF / RELATÓRIO ---
@@ -38,10 +41,3 @@ weasyprint
 python-telegram-bot==20.7
 
 python-dotenv
-
-
-
-
-
-
-
