@@ -20,6 +20,15 @@ st.sidebar.page_link("app.py", label="Dashboard Geral")
 
 carteiras = user.get("carteiras", [])
 
+# ADM vê tudo
+if user["email"] in ADMINS:
+    carteiras = [
+        "Carteira de Ações IBOV",
+        "Carteira de BDRs",
+        "Carteira de Small Caps",
+        "Carteira de Opções"
+    ]
+
 if "Carteira de Ações IBOV" in carteiras:
     st.sidebar.page_link("pages/_hidden_carteira_ibov.py", label="Carteira IBOV")
 
