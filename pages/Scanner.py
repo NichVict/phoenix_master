@@ -1435,7 +1435,7 @@ def checar_operacoes_scanner():
 # ============================================
 # UI – BOTÃO CHECAR
 # ============================================
-st.markdown("### ✅ Checar operações abertas (Scanner Fênix)")
+st.markdown("##### ✅ Checar operações abertas (Scanner Fênix)")
 
 if st.button("🔍 CHECAR OPERAÇÕES AGORA", type="secondary", use_container_width=True):
     total, fechadas = checar_operacoes_scanner()
@@ -1519,9 +1519,9 @@ df_encerradas = carregar_df_operacoes("encerrada")
 
 # ============================================
 
-st.markdown("## 📘 Operações Abertas — Scanner Fênix")
+#st.markdown("## 📘 Operações Abertas — Scanner Fênix")
 
-with st.expander("👆 Ver operações abertas", expanded=False):
+with st.expander("📘 Ver operações abertas", expanded=False):
     if df_abertas.empty:
         st.info("Nenhuma operação aberta.")
     else:
@@ -1653,9 +1653,9 @@ with st.expander("👆 Ver operações abertas", expanded=False):
 # ============================================
 # 📕 EXPANDER — OPERAÇÕES ENCERRADAS
 # ============================================
-st.markdown("## 📕 Operações Encerradas — Scanner Fênix")
+#st.markdown("#### 📕 Operações Encerradas — Scanner Fênix")
 
-with st.expander("👆 Ver operações encerradas", expanded=False):
+with st.expander("📕 Ver operações encerradas", expanded=False):
     if df_encerradas.empty:
         st.info("Nenhuma operação encerrada ainda.")
     else:
