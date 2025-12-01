@@ -153,9 +153,10 @@ font-size:12px;
 font-weight:900;
 text-transform:uppercase;
 letter-spacing:.09em;
-text-decoration:none;
+text-decoration:none !important;   /* 👈 FORÇA O NÃO-SUBLINHADO */
 transition:all .18s ease-out;
 }
+
 
 .btn-assinar:hover {
 transform:translateY(-1px) scale(1.03);
@@ -562,6 +563,39 @@ def sparkline_figure(stats):
     return fig
 
 
+def barras_lucro_prejuizo(stats):
+    if not stats["has_data"] or not stats["sparkline"]:
+        valores = []
+    else:
+        valores = [p["pct"] for p in stats["sparkline"]]
+
+    prejuizos = [-v for v in valores if v < 0]
+    lucros = [v for v in valores if v > 0]
+
+    media_prejuizo = (sum(prejuizos) / len(prejuizos)) if prejuizos else 0
+    media_lucro = (sum(lucros) / len(lucros)) if lucros else 0
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Bar(
+            x=["Média Prejuízo", "Média Lucro"],
+            y=[media_prejuizo, media_lucro],
+            text=[f"{media_prejuizo:.2f}%", f"{media_lucro:.2f}%"],
+            textposition="outside",
+        )
+    )
+
+    fig.update_layout(
+        template="plotly_dark",
+        margin=dict(l=10, r=10, t=20, b=20),
+        height=190,
+        showlegend=False,
+        xaxis=dict(title=""),
+        yaxis=dict(title="Retorno médio (%)"),
+    )
+    return fig
+
+
 def barras_pend_andamento(resumo_estado):
     pend = resumo_estado["pendentes"]
     andam = resumo_estado["andamento"]
@@ -724,7 +758,7 @@ def render_carteira(card_data):
             st.plotly_chart(fig_spark, use_container_width=True)
     with c2:
         st.markdown("##### 📊 Trades ativos")
-        fig_bar = barras_pend_andamento(resumo_estado)
+        fig_bar = barras_lucro_prejuizo(stats)
         st.plotly_chart(fig_bar, use_container_width=True)
 
 
