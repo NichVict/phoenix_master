@@ -539,20 +539,21 @@ def sparkline_figure(stats):
     df = pd.DataFrame(stats["sparkline"])
     df = df.sort_values("data")
 
-    # ===== SUAVIZAÇÃO =====
-    # Média móvel mais forte
-    df["pct_smooth"] = df["pct"].rolling(window=5, min_periods=1).mean()
+    # ===== CÁLCULO DO RETORNO ACUMULADO =====
+    df["acumulado"] = df["pct"].cumsum()
 
-    # Interpolação adicional para suavizar
-    df["pct_smooth"] = df["pct_smooth"].interpolate(method="cubic")
+    # ===== SUAVIZAÇÃO DA LINHA =====
+    df["acumulado_smooth"] = (
+        df["acumulado"].rolling(window=3, min_periods=1).mean()
+    ).interpolate(method="linear")
 
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
             x=df["data"],
-            y=df["pct_smooth"],
+            y=df["acumulado_smooth"],
             mode="lines",
-            line=dict(width=3),
+            line=dict(width=4),  # mais robusta
         )
     )
 
@@ -562,9 +563,10 @@ def sparkline_figure(stats):
         height=190,
         showlegend=False,
         xaxis=dict(title="", showgrid=False),
-        yaxis=dict(title="Retorno (%)", showgrid=True),
+        yaxis=dict(title="Retorno acumulado (%)", showgrid=True),
     )
     return fig
+
 
 
 
@@ -587,8 +589,9 @@ def barras_lucro_prejuizo(stats):
             y=[-abs(media_prejuizo), media_lucro],
             text=[f"-{abs(media_prejuizo):.2f}%", f"{media_lucro:.2f}%"],
             textposition="outside",
+            insidetextanchor="middle",
+            cliponaxis=False,  # permite texto sair do canvas
             textfont=dict(size=14),
-
         )
     )
 
@@ -603,28 +606,7 @@ def barras_lucro_prejuizo(stats):
     return fig
 
 
-def barras_pend_andamento(resumo_estado):
-    pend = resumo_estado["pendentes"]
-    andam = resumo_estado["andamento"]
 
-    fig = go.Figure()
-    fig.add_trace(
-        go.Bar(
-            x=["Pendentes", "Andamento"],
-            y=[pend, andam],
-            text=[pend, andam],
-            textposition="outside",
-        )
-    )
-    fig.update_layout(
-        template="plotly_dark",
-        margin=dict(l=10, r=10, t=20, b=20),
-        height=190,
-        showlegend=False,
-        xaxis=dict(title=""),
-        yaxis=dict(title="Qtde trades"),
-    )
-    return fig
 
 # ===========================
 # 🧱 SUPER CARD DE CARTEIRA (1 COLUNA)
