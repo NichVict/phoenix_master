@@ -1,12 +1,7 @@
 import streamlit as st
 from supabase import create_client
 
-# ADMINISTRADORES COM ACESSO TOTAL
-ADMINS = ["xande5@hotmail.com"]
 
-# ============================
-# FUNÇÃO QUE CRIA CLIENTE SÓ NA HORA
-# ============================
 def get_client():
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
@@ -14,9 +9,30 @@ def get_client():
 
 
 # ============================
-# LOGIN POR TOKEN
+# REQUIRE TOKEN OU ADMIN
 # ============================
 def require_token():
+    # ---- ADMIN BYPASS ----
+    bypass = st.secrets.get("ADMIN_BYPASS", "FALSE")
+    admin_email = st.secrets.get("ADMIN_EMAIL", "")
+
+    if bypass.upper() == "TRUE" and admin_email:
+        st.session_state["user"] = {
+            "id": "admin",
+            "email": admin_email,
+            "carteiras": [
+                "Carteira de Ações IBOV",
+                "Carteira de BDRs",
+                "Carteira de Small Caps",
+                "Carteira de Opções",
+                "Dash Ações",
+                "dashboard geral",
+                "Scanner"
+            ]
+        }
+        return st.session_state["user"]
+
+    # ---- TOKEN NORMAL ----
     token = st.experimental_get_query_params().get("token", [None])[0]
 
     if not token:
@@ -39,23 +55,11 @@ def require_token():
 
     user = user[0]
 
-    # Sessão base
     st.session_state["user"] = {
         "id": user["id"],
         "email": user["email"],
         "carteiras": user.get("carteiras", []),
     }
-
-    # =============================
-    #   ADMIN TEM ACESSO TOTAL 🔥
-    # =============================
-    if user["email"] in ADMINS:
-        st.session_state["user"]["carteiras"] = [
-            "Carteira de Ações IBOV",
-            "Carteira de BDRs",
-            "Carteira de Small Caps",
-            "Carteira de Opções"
-        ]
 
     return st.session_state["user"]
 
@@ -70,7 +74,10 @@ def require_carteira(nome_carteira):
         st.error("Sessão expirada. Acesse novamente pelo link do e-mail.")
         st.stop()
 
-    # Se não tiver carteira e não for admin → bloqueia
-    if nome_carteira not in user["carteiras"] and user["email"] not in ADMINS:
+    # Admin sempre libera tudo
+    if user["email"] == st.secrets.get("ADMIN_EMAIL"):
+        return True
+
+    if nome_carteira not in user["carteiras"]:
         st.error("🚫 Você não tem acesso a esta carteira.")
         st.stop()
