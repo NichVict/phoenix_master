@@ -9,8 +9,18 @@ from carteiras_bridge import (
     get_indice_ativo,
     supabase_select,
 )
+
+
+
 import requests
 import fenix_opcoes.supabase_ops as supabase_ops_mod
+
+# ===== IMPORT PARA TABELA SQL DE OPÇÕES =====
+def supabase_select_opcoes(query_string: str):
+    """
+    Wrapper igual ao supabase_select, mas apontando para a tabela opcoes_operacoes.
+    """
+    return supabase_select("opcoes_operacoes", query_string)
 
 REST_ENDPOINT_OP = getattr(supabase_ops_mod, "REST_ENDPOINT", None)
 HEADERS_OP = getattr(supabase_ops_mod, "HEADERS", None)
@@ -311,6 +321,96 @@ def build_stats_for_indice(dados_gerais, indice_atual: str):
         "qtd_trades": qtd_trades,
         "sparkline": pontos_pct,
     }
+
+def build_stats_opcoes_30d():
+    """
+    Carrega operações encerradas de opções diretamente da tabela 'opcoes_operacoes'
+    do Supabase, filtrando os últimos 30 dias. Calcula:
+    - lucro_total_pct
+    - media_pct
+    - winrate
+    - qtd_trades
+    - sparkline (retorno por data)
+    """
+
+    hoje = datetime.date.today()
+    inicio_30d = hoje - datetime.timedelta(days=30)
+
+    q = (
+        f"?select=symbol,preco_entrada,preco_saida,retorno_final_pct,"
+        f"timestamp_saida,created_at,status,indice"
+        f"&status=eq.encerrada"
+        f"&timestamp_saida=gte.{inicio_30d}T00:00:00"
+        f"&timestamp_saida=lte.{hoje}T23:59:59"
+    )
+
+    dados = supabase_select_opcoes(q) or []
+
+    if not dados:
+        return {
+            "has_data": False,
+            "lucro_total_pct": 0.0,
+            "media_pct": 0.0,
+            "winrate": 0.0,
+            "qtd_trades": 0,
+            "sparkline": [],
+        }
+
+    df = pd.DataFrame(dados)
+
+    # Converte datas
+    df["timestamp_saida"] = pd.to_datetime(df["timestamp_saida"], errors="coerce")
+    df["created_at"] = pd.to_datetime(df["created_at"], errors="coerce")
+
+    # Se não tiver timestamp, descarta
+    df = df.dropna(subset=["timestamp_saida"]).copy()
+
+    # Calcula pnl_pct
+    if "retorno_final_pct" in df.columns:
+        df["pnl_pct"] = pd.to_numeric(df["retorno_final_pct"], errors="coerce").fillna(0.0)
+    else:
+        df["preco_entrada"] = pd.to_numeric(df.get("preco_entrada"), errors="coerce")
+        df["preco_saida"] = pd.to_numeric(df.get("preco_saida"), errors="coerce")
+        df["pnl_pct"] = ((df["preco_saida"] - df["preco_entrada"]) /
+                         df["preco_entrada"]) * 100
+
+    # Remove qualquer NaN restante
+    df["pnl_pct"] = df["pnl_pct"].fillna(0)
+
+    valores = df["pnl_pct"].tolist()
+
+    if not valores:
+        return {
+            "has_data": False,
+            "lucro_total_pct": 0.0,
+            "media_pct": 0.0,
+            "winrate": 0.0,
+            "qtd_trades": 0,
+            "sparkline": [],
+        }
+
+    lucro_total_pct = sum(valores)
+    media_pct = sum(valores) / len(valores)
+    qtd_trades = len(valores)
+    wins = [v for v in valores if v > 0]
+    winrate = len(wins) / qtd_trades if qtd_trades else 0.0
+
+    # Sparkline
+    spark = [
+        {"data": row["timestamp_saida"], "pct": row["pnl_pct"]}
+        for _, row in df.sort_values("timestamp_saida").iterrows()
+    ]
+
+    return {
+        "has_data": True,
+        "lucro_total_pct": lucro_total_pct,
+        "media_pct": media_pct,
+        "winrate": winrate,
+        "qtd_trades": qtd_trades,
+        "sparkline": spark,
+    }
+
+
 
 
 def build_stats_opcoes_30d():
