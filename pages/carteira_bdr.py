@@ -1,7 +1,7 @@
 import streamlit as st
 
 # IMPORTA FUNÇÕES E ESTADOS DO DASH PRINCIPAL
-from Dash_Acoes import (
+from carteiras_bridge import (
     curto_state,
     loss_state,
     get_indice_ativo,
@@ -9,6 +9,7 @@ from Dash_Acoes import (
     render_andamento_cards,
     render_resumo_30d
 )
+
 
 # ============================================
 # 📄 PÁGINA DA CARTEIRA BDR — PROJETO PHOENIX
