@@ -746,7 +746,7 @@ def render_carteira(card_data):
         if fig_spark:
             st.plotly_chart(fig_spark, use_container_width=True)
     with c2:
-        st.markdown("####### 📊 Assimetria Positiva")
+        st.markdown("###### 📊 Assimetria Positiva")
         fig_bar = barras_lucro_prejuizo(stats)
         st.plotly_chart(fig_bar, use_container_width=True)
 
