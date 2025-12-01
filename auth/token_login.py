@@ -1,7 +1,9 @@
 import streamlit as st
 from supabase import create_client
 
-
+# ============================
+# CLIENT DO SUPABASE
+# ============================
 def get_client():
     url = st.secrets["SUPABASE_URL"]
     key = st.secrets["SUPABASE_KEY"]
@@ -9,14 +11,15 @@ def get_client():
 
 
 # ============================
-# REQUIRE TOKEN OU ADMIN
+# REQUIRE TOKEN OU ADMIN BYPASS
 # ============================
 def require_token():
+
     # ---- ADMIN BYPASS ----
-    bypass = st.secrets.get("ADMIN_BYPASS", "FALSE")
+    bypass = str(st.secrets.get("ADMIN_BYPASS", "FALSE")).upper() == "TRUE"
     admin_email = st.secrets.get("ADMIN_EMAIL", "")
 
-    if bypass.upper() == "TRUE" and admin_email:
+    if bypass and admin_email:
         st.session_state["user"] = {
             "id": "admin",
             "email": admin_email,
@@ -25,10 +28,9 @@ def require_token():
                 "Carteira de BDRs",
                 "Carteira de Small Caps",
                 "Carteira de Opções",
-                "Dash Ações",
-                "dashboard geral",
-                "Scanner"
-            ]
+                "Scanner Fênix",
+                "Dashboard Geral",
+            ],
         }
         return st.session_state["user"]
 
@@ -65,7 +67,7 @@ def require_token():
 
 
 # ============================
-# PROTEÇÃO POR CARTEIRA
+# REQUIRE CARTEIRA
 # ============================
 def require_carteira(nome_carteira):
     user = st.session_state.get("user")
@@ -74,10 +76,12 @@ def require_carteira(nome_carteira):
         st.error("Sessão expirada. Acesse novamente pelo link do e-mail.")
         st.stop()
 
-    # Admin sempre libera tudo
+    # Admin vê tudo
     if user["email"] == st.secrets.get("ADMIN_EMAIL"):
         return True
 
     if nome_carteira not in user["carteiras"]:
         st.error("🚫 Você não tem acesso a esta carteira.")
         st.stop()
+
+    return True
