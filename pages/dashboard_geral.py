@@ -538,16 +538,19 @@ def sparkline_figure(stats):
     df = pd.DataFrame(stats["sparkline"])
     df = df.sort_values("data")
 
+    # ===== SUAVIZAÇÃO (WINDOW = 3) =====
+    df["pct_smooth"] = df["pct"].rolling(window=3, min_periods=1).mean()
+
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
             x=df["data"],
-            y=df["pct"],
-            mode="lines+markers",
-            line=dict(width=2),
-            marker=dict(size=5),
+            y=df["pct_smooth"],
+            mode="lines",
+            line=dict(width=3),  # linha mais uniforme
         )
     )
+
     fig.update_layout(
         template="plotly_dark",
         margin=dict(l=10, r=10, t=20, b=20),
@@ -557,6 +560,7 @@ def sparkline_figure(stats):
         yaxis=dict(title="Retorno (%)", showgrid=True),
     )
     return fig
+
 
 def barras_pend_andamento(resumo_estado):
     pend = resumo_estado["pendentes"]
