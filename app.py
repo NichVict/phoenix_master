@@ -1,30 +1,20 @@
 import streamlit as st
-from auth.token_login import require_token
-from bp.ui.streamlit_dashboard import render_dashboard
 
-
-# ----------------------------------------------------------
-# 1) PROTEGER O APP COM TOKEN
-# ----------------------------------------------------------
-require_token()
-
-
-# ----------------------------------------------------------
-# 2) CONFIGURAÇÕES DO APP
-# ----------------------------------------------------------
+# CONFIGURAÇÃO OBRIGATÓRIA ANTES DE QUALQUER IMPORT PESADO
 st.set_page_config(
     page_title="Fênix Premium",
     page_icon="🦅",
     layout="wide"
 )
 
+from auth.token_login import require_token
+from bp.ui.streamlit_dashboard import render_dashboard
 
-# ----------------------------------------------------------
-# 3) DASHBOARD PRINCIPAL
-# ----------------------------------------------------------
+# PROTEGER APP
+require_token()
+
 def main():
     render_dashboard()
-
 
 if __name__ == "__main__":
     main()
