@@ -1,11 +1,8 @@
 import streamlit as st
-from auth.token_login import require_token, require_carteira
+from auth.token_login import require_token
 
-# ==========================
-# AUTENTICAÇÃO
-# ==========================
-user = require_token()  
-# user = {"email": "...", "carteiras": [...]}
+user = require_token()
+carteiras = user.get("carteiras", [])
 
 st.set_page_config(
     page_title="Fênix Premium",
@@ -13,35 +10,23 @@ st.set_page_config(
     layout="wide"
 )
 
-# ==========================
-# SIDEBAR DINÂMICO
-# ==========================
 st.sidebar.title("📊 Fênix Premium")
 
-# Dashboard principal
-st.sidebar.page_link("app.py", label="Dashboard Geral")
+# Página do BP (sempre visível)
+st.sidebar.page_link("pages/bp_dashboard.py", label="Scanner Fênix")
 
-carteiras = user.get("carteiras", [])
-
-# Carteira IBOV
+# Carteiras
 if "Carteira de Ações IBOV" in carteiras:
-    st.sidebar.page_link("pages/_hidden_carteira_ibov.py", label="Carteira IBOV")
+    st.sidebar.page_link("pages/carteira_ibov.py", label="Carteira IBOV")
 
-# BDR
 if "Carteira de BDRs" in carteiras:
-    st.sidebar.page_link("pages/_hidden_carteira_bdr.py", label="Carteira BDR")
+    st.sidebar.page_link("pages/carteira_bdr.py", label="Carteira BDR")
 
-# Small Caps
 if "Carteira de Small Caps" in carteiras:
-    st.sidebar.page_link("pages/_hidden_carteira_small.py", label="Carteira Small Caps")
+    st.sidebar.page_link("pages/carteira_small.py", label="Carteira Small Caps")
 
-# Opções
 if "Carteira de Opções" in carteiras:
-    st.sidebar.page_link("pages/_hidden_carteira_opcoes.py", label="Carteira de Opções")
+    st.sidebar.page_link("pages/carteira_opcoes.py", label="Carteira de Opções")
 
-# ==========================
-# DASHBOARD PRINCIPAL
-# ==========================
 st.title("🦅 Fênix Premium")
-st.subheader("Bem-vindo ao seu painel de investimentos premium!")
-st.info("Use o menu lateral para acessar suas carteiras.")
+st.info("Use o menu lateral para navegar.")
