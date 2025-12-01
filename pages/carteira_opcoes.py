@@ -18,14 +18,7 @@ import pandas as pd
 import requests
 import matplotlib.pyplot as plt
 
-# ==== PROTEÇÃO DA PÁGINA (ADICIONE AQUI) ====
 
-from auth.token_login import require_token, require_carteira
-
-# 1) Carrega o usuário pelo token da URL
-user = require_token()
-
-require_carteira("Carteira de Opções")
 # ============================================
 
 # ==== REPORTLAB PARA PDF ====
