@@ -1098,7 +1098,7 @@ required_cols = [
 missing = [c for c in required_cols if c not in top5.columns]
 
 if missing:
-    st.error(f"❌ top5 sem colunas essenciais: {missing}")
+    st.error(f"Utilize os parâmetros na sidebar e Rode o Scanner")
 
 else:
     for idx, row in top5.iterrows():
