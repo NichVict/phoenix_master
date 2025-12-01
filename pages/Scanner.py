@@ -34,17 +34,7 @@ from fenix_opcoes.notificacoes import enviar_email, enviar_telegram
 import fenix_opcoes.supabase_ops as supabase_ops_mod
 
 
-# Se não há usuário carregado → bloqueia
-if "user" not in st.session_state:
-    st.error("Sessão expirada. Faça login como administrador.")
-    st.stop()
 
-# Se o e-mail do usuário NÃO é o do admin → bloqueia
-if st.session_state["user"]["email"] != st.secrets.get("ADMIN_EMAIL"):
-    st.error("🚫 Acesso restrito ao administrador.")
-    st.stop()
-
-# ---- DAQUI PRA BAIXO É A LÓGICA NORMAL DA PÁGINA ----
 
 # ===============================
 
