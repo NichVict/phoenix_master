@@ -1,7 +1,7 @@
 import streamlit as st
 
 # IMPORTA FUNÇÕES E ESTADOS DO DASH PRINCIPAL
-from Dash_Ações import (
+from Dash_Acoes import (
     curto_state,
     loss_state,
     get_indice_ativo,
