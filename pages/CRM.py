@@ -67,7 +67,7 @@ st.markdown("""
 
 
 # ---------------------- CONFIG STREAMLIT ----------------------
-st.set_page_config(page_title="Clientes - CRM", layout="wide")
+
 
 # ---------------------- SECRETS / CONFIG ----------------------
 def get_secret(name: str, default=None):
@@ -97,27 +97,7 @@ except Exception as e:
     st.stop()
 
 # ---------------------- AUTENTICAÇÃO SIMPLES ----------------------
-def check_login(user: str, pwd: str) -> bool:
-    # Ajuste aqui se quiser trocar credenciais
-    return user == "Eu" and pwd == "251200"
 
-if "auth" not in st.session_state:
-    st.session_state.auth = False
-
-if not st.session_state.auth:
-    st.title("🔐 Login")
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        user = st.text_input("Usuário")
-    with col2:
-        pwd = st.text_input("Senha", type="password")
-    if st.button("Entrar", use_container_width=True):
-        if check_login(user, pwd):
-            st.session_state.auth = True
-            st.rerun()
-        else:
-            st.error("Credenciais inválidas.")
-    st.stop()
 
 # ---------------------- FUNÇÕES AUXILIARES ----------------------
 PAISES = {
@@ -425,7 +405,8 @@ def _enviar_email(nome: str, email_destino: str, assunto: str, corpo: str, anexa
         msg.attach(MIMEText(corpo, "html", "utf-8"))
 
         if anexar_pdf:
-            with open("contrato_Aurinvest.pdf", "rb") as f:
+            with open("crm/contrato_Aurinvest.pdf", "rb") as f:
+
                 part = MIMEApplication(f.read(), _subtype="pdf")
                 part.add_header("Content-Disposition", "attachment", filename="Contrato_Aurinvest.pdf")
                 msg.attach(part)
