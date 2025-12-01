@@ -1,6 +1,7 @@
 import streamlit as st
 from supabase import create_client
 
+ADMINS = ["xande5@hotmail.com"]
 
 # ============================
 # FUNÇÃO QUE CRIA CLIENTE SÓ NA HORA
