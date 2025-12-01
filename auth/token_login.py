@@ -11,6 +11,9 @@ def get_client():
     return create_client(url, key)
 
 
+# ============================
+# LOGIN ADMINISTRADOR
+# ============================
 def admin_login():
     st.title("🔐 Login Administrador")
 
@@ -40,21 +43,22 @@ def admin_login():
             st.error("Credenciais inválidas.")
 
 
+# ============================
+# LOGIN POR TOKEN (CLIENTE)
+# ============================
 def require_token():
+    params = st.experimental_get_query_params()
+    token = params.get("token", [None])[0]
 
-    # =====================================================
-    # 0) ADMIN LOGIN SEM TOKEN
-    # =====================================================
-    token = st.experimental_get_query_params().get("token", [None])[0]
-
+    # ============================
+    # SEM TOKEN → LOGIN ADMIN
+    # ============================
     if not token:
-        # Sem token → força login admin
-        return admin_login()   # 🔥 chama tela de login admin
+        return admin_login()
 
-
-    # =====================================================
-    # 1) TOKEN NORMAL → LOGIN DO CLIENTE
-    # =====================================================
+    # ============================
+    # LOGIN CLIENTE POR TOKEN
+    # ============================
     supabase = get_client()
 
     res = (
@@ -71,10 +75,7 @@ def require_token():
 
     user = user[0]
 
-    # ======================================
-    # CORREÇÃO: transformar carteiras em lista
-    # ======================================
-    import json
+    # Conversão segura
     raw = user.get("carteiras", "[]")
 
     try:
@@ -87,35 +88,7 @@ def require_token():
     except:
         carteiras = []
 
-    st.session_state["user"] = {
-        "id": user["id"],
-        "email": user["email"],
-        "carteiras": carteiras,
-    }
-
-    return st.session_state["user"]
-
-
-    # ======================================
-    # CORREÇÃO: transformar carteiras em lista
-    # ======================================
-    carteiras_raw = user.get("carteiras", "[]")
-
-    # Garantir que é sempre uma lista válida
-    try:
-        # Se vier como JSON string → converte
-        if isinstance(carteiras_raw, str):
-            carteiras = json.loads(carteiras_raw)
-        # Se já vier como lista (menos comum) → usa direto
-        elif isinstance(carteiras_raw, list):
-            carteiras = carteiras_raw
-        else:
-            carteiras = []
-    except:
-        carteiras = []
-
-    # ======================================
-
+    # Salva usuário na sessão
     st.session_state["user"] = {
         "id": user["id"],
         "email": user["email"],
@@ -126,20 +99,26 @@ def require_token():
 
 
 # ============================
-# REQUIRE CARTEIRA
+# VERIFICAR SE O USUÁRIO EXISTE (PÁGINAS)
+# ============================
+def require_session_user():
+    user = st.session_state.get("user")
+    if not user:
+        st.error("Sessão expirada. Volte para a página inicial.")
+        st.stop()
+    return user
+
+
+# ============================
+# PROTEÇÃO POR CARTEIRA
 # ============================
 def require_carteira(nome_carteira):
-    user = st.session_state.get("user")
+    user = require_session_user()
 
-    if not user:
-        st.error("Sessão expirada. Acesse novamente pelo link do e-mail.")
-        st.stop()
-
-    # Admin vê tudo
+    # Admin sempre tem acesso
     if user["email"] == st.secrets.get("ADMIN_EMAIL"):
         return True
 
-    # Validação real: agora funciona corretamente
     if nome_carteira not in user["carteiras"]:
         st.error("🚫 Você não tem acesso a esta carteira.")
         st.stop()
