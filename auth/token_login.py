@@ -40,37 +40,21 @@ def admin_login():
             st.error("Credenciais inválidas.")
 
 
-# ============================
-# REQUIRE TOKEN OU ADMIN BYPASS
-# ============================
 def require_token():
 
-    # ---- ADMIN BYPASS ----
-    bypass = str(st.secrets.get("ADMIN_BYPASS", "FALSE")).upper() == "TRUE"
-    admin_email = st.secrets.get("ADMIN_EMAIL", "")
-
-    if bypass and admin_email:
-        st.session_state["user"] = {
-            "id": "admin",
-            "email": admin_email,
-            "carteiras": [
-                "Carteira de Ações IBOV",
-                "Carteira de BDRs",
-                "Carteira de Small Caps",
-                "Carteira de Opções",
-                "Scanner Fênix",
-                "Dashboard Geral",
-            ],
-        }
-        return st.session_state["user"]
-
-    # ---- TOKEN NORMAL ----
+    # =====================================================
+    # 0) ADMIN LOGIN SEM TOKEN
+    # =====================================================
     token = st.experimental_get_query_params().get("token", [None])[0]
 
     if not token:
-        st.error("Você precisa acessar pelo link enviado por e-mail.")
-        st.stop()
+        # Sem token → força login admin
+        return admin_login()   # 🔥 chama tela de login admin
 
+
+    # =====================================================
+    # 1) TOKEN NORMAL → LOGIN DO CLIENTE
+    # =====================================================
     supabase = get_client()
 
     res = (
@@ -86,6 +70,31 @@ def require_token():
         st.stop()
 
     user = user[0]
+
+    # ======================================
+    # CORREÇÃO: transformar carteiras em lista
+    # ======================================
+    import json
+    raw = user.get("carteiras", "[]")
+
+    try:
+        if isinstance(raw, str):
+            carteiras = json.loads(raw)
+        elif isinstance(raw, list):
+            carteiras = raw
+        else:
+            carteiras = []
+    except:
+        carteiras = []
+
+    st.session_state["user"] = {
+        "id": user["id"],
+        "email": user["email"],
+        "carteiras": carteiras,
+    }
+
+    return st.session_state["user"]
+
 
     # ======================================
     # CORREÇÃO: transformar carteiras em lista
