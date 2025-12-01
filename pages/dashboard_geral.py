@@ -662,6 +662,11 @@ ASSINAR AGORA!
 # ===========================
 
 # ===========================
+# 📊 CARREGA DADOS DE AÇÕES (30 DIAS)
+# ===========================
+dados_30d_geral = load_ops_30d()
+
+# ===========================
 # 🔢 CONFIGURAÇÃO DAS CARTEIRAS
 # ===========================
 carteiras_cfg = [
