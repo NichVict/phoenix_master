@@ -1,11 +1,15 @@
 import streamlit as st
 import requests
 
-# =================================================
-# 🔧 CONFIGURAÇÃO
-# =================================================
-st.set_page_config(page_title="Login - Phoenix", layout="wide")
+st.set_page_config(page_title="Login Phoenix", layout="wide")
 
+st.title("🔑 Login Phoenix – Acesso via Token (REST)")
+st.write("Versão simplificada para validar autenticação e permissões.")
+
+
+# =================================================
+# 🔗 CREDENCIAIS
+# =================================================
 SUPABASE_URL = st.secrets["SUPABASE_URL_CLIENTES"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY_CLIENTES"]
 
@@ -17,16 +21,18 @@ HEADERS = {
     "Authorization": f"Bearer {SUPABASE_KEY}",
 }
 
+
 # =================================================
-# 🔍 FUNÇÃO DE BUSCA VIA REST
+# FUNÇÃO: Buscar cliente pelo token (REST)
 # =================================================
 def buscar_cliente(token):
-    url = f"{REST_URL}?token=eq.{token}&select=*"
+    url = REST_URL + f"?token=eq.{token}&select=*"
+    st.write("DEBUG → URL:", url)
+
     resp = requests.get(url, headers=HEADERS)
 
-    st.write("DEBUG → URL:", url)
-    st.write("DEBUG → STATUS:", resp.status_code)
-    st.write("DEBUG → RAW:", resp.text)
+    st.write("DEBUG → Status:", resp.status_code)
+    st.write("DEBUG → Conteúdo bruto:", resp.text)
 
     if resp.status_code != 200:
         return None
@@ -37,34 +43,69 @@ def buscar_cliente(token):
 
     return data[0]
 
+
 # =================================================
-# 🔐 TOKEN DA URL
+# CAPTURAR TOKEN DA URL
 # =================================================
 params = st.query_params
 token = params.get("token", None)
 
-st.title("🔐 Login – Phoenix Premium")
-st.write("Página dedicada apenas à autenticação via token REST.")
-
-st.write("DEBUG → Token:", token)
+st.write("DEBUG → Token recebido:", token)
 
 if not token:
-    st.error("Nenhum token encontrado na URL.")
-    st.info("Use o link mágico enviado para o seu e-mail.")
+    st.error("❌ Nenhum token encontrado na URL.")
     st.stop()
 
+
 # =================================================
-# 🔐 BUSCA DO CLIENTE
+# BUSCAR CLIENTE
 # =================================================
 cliente = buscar_cliente(token)
 
 if not cliente:
     st.error("❌ Token inválido ou cliente não encontrado.")
-    st.markdown("---")
-    st.markdown("### 📊 Acesso livre ao dashboard geral")
-    st.markdown(
-        f"➡️ [Ir para o Dashboard Geral](./dashboard_geral?token={token})"
-    )
+    st.stop()
+
+# =================================================
+# SALVAR NA SESSÃO (ESSENCIAL!)
+# =================================================
+st.session_state["token"] = token
+st.session_state["cliente"] = cliente
+
+
+# =================================================
+# MOSTRAR INFO DO CLIENTE
+# =================================================
+st.success(f"🔓 Login reconhecido! Bem-vindo, **{cliente['nome']}**.")
+
+st.write("### 🗂 Suas carteiras:")
+for c in cliente["carteiras"]:
+    st.write(f"✔️ {c}")
+
+st.markdown("---")
+st.write("### 🔍 Dados completos do cliente (debug):")
+st.json(cliente)
+
+st.markdown("---")
+
+# =================================================
+# 🔗 LINKS PARA PÁGINAS PROTEGIDAS
+# =================================================
+
+MAPA = {
+    "Carteira de Ações IBOV": "carteira_ibov",
+    "Carteira de BDRs": "carteira_bdr",
+    "Carteira de Small Caps": "carteira_small",
+    "Carteira de Opções": "carteira_opcoes",
+}
+
+st.write("### 📁 Acessar Carteiras Liberadas:")
+for cart in cliente["carteiras"]:
+    page = MAPA.get(cart)
+    if page:
+        st.page_link(page + ".py", label=f"➡️ {cart}", icon="📊")
+
+st.page_link("dashboard_geral.py", label="🌐 Dashboard Geral (Livre)", icon="🌍")
     st.stop()
 
 # =================================================
