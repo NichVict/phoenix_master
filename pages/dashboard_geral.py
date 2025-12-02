@@ -33,6 +33,9 @@ LINK_ASSINAR = "https://app.infinitepay.io/products"
 st.markdown(
     """
 <style>
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200" rel="stylesheet">
+
 .dashboard-title {
 font-size: 32px;
 font-weight: 800;
@@ -924,56 +927,64 @@ for card in cards_data:
 # ===========================
 st.markdown("---")
 # ===========================
-# 🏆 RANKING PHOENIX — PREMIUM
+# 🏆 Ranking Phoenix — Institucional
 # ===========================
-st.markdown("## 🏆 Ranking Phoenix — Últimos 30 dias")
 
-# 1) Melhor Phoenix Score (força geral)
-rank_score = sorted(cards_data, key=lambda c: c["score"], reverse=True)
-best_score = rank_score[0]
+st.markdown("## Ranking Phoenix — Últimos 30 dias")
 
+# --- MÉTRICAS ---
+rank_score = sorted(cards_data, key=lambda c: c["score"], reverse=True)[0]
+rank_lucro = sorted(cards_data, key=lambda c: c["stats"]["lucro_total_pct"], reverse=True)[0]
+rank_win = sorted(cards_data, key=lambda c: c["stats"]["winrate"], reverse=True)[0]
+rank_assim = sorted(cards_data, key=lambda c: assimetria(c["stats"]), reverse=True)[0]
+
+# ------------ 1. Melhor Score -------------
 st.markdown(f"""
 <div class='rank-card'>
-  <div class='rank-title'>🥇 Melhor carteira geral — {best_score['emoji']} {best_score['nome']}</div>
-  <div class='rank-sub'>Phoenix Score: {best_score['score']}</div>
+  <div class='rank-title'>
+    <span class="material-symbols-outlined rank-icon">trending_up</span>
+    Melhor carteira geral — {rank_score['nome']}
+  </div>
+  <div class='rank-sub'>Phoenix Score: {rank_score['score']}</div>
 </div>
 """, unsafe_allow_html=True)
 
-# 2) Maior lucro total
-rank_lucro = sorted(cards_data, key=lambda c: c["stats"]["lucro_total_pct"], reverse=True)
-best_lucro = rank_lucro[0]
-
+# ------------ 2. Maior Lucro 30d -------------
 st.markdown(f"""
 <div class='rank-card'>
-  <div class='rank-title'>💰 Maior lucro 30d — {best_lucro['emoji']} {best_lucro['nome']}</div>
-  <div class='rank-sub'>Lucro total: {best_lucro['stats']['lucro_total_pct']:.1f}%</div>
+  <div class='rank-title'>
+    <span class="material-symbols-outlined rank-icon">stacked_line_chart</span>
+    Maior retorno 30 dias — {rank_lucro['nome']}
+  </div>
+  <div class='rank-sub'>Retorno acumulado: {rank_lucro['stats']['lucro_total_pct']:.1f}%</div>
 </div>
 """, unsafe_allow_html=True)
 
-# 3) Melhor winrate (consistência)
-rank_win = sorted(cards_data, key=lambda c: c["stats"]["winrate"], reverse=True)
-best_win = rank_win[0]
-
+# ------------ 3. Melhor Winrate -------------
 st.markdown(f"""
 <div class='rank-card'>
-  <div class='rank-title'>🎯 Melhor winrate 30d — {best_win['emoji']} {best_win['nome']}</div>
-  <div class='rank-sub'>Winrate: {(best_win['stats']['winrate']*100):.1f}%</div>
+  <div class='rank-title'>
+    <span class="material-symbols-outlined rank-icon">target</span>
+    Maior consistência (winrate) — {rank_win['nome']}
+  </div>
+  <div class='rank-sub'>Winrate: {(rank_win['stats']['winrate']*100):.1f}%</div>
 </div>
 """, unsafe_allow_html=True)
 
-# 4) Melhor Assimetria Positiva (qualidade operacional)
-rank_assimetria = sorted(cards_data, key=lambda c: assimetria(c["stats"]), reverse=True)
-best_assim = rank_assimetria[0]
-
-valor_assim = assimetria(best_assim["stats"])
-valor_assim_str = "∞" if valor_assim == float('inf') else f"{valor_assim:.2f}x"
+# ------------ 4. Melhor Assimetria -------------
+assim_val = assimetria(rank_assim["stats"])
+assim_str = "∞" if assim_val == float("inf") else f"{assim_val:.2f}x"
 
 st.markdown(f"""
 <div class='rank-card'>
-  <div class='rank-title'>⚖️ Melhor assimetria — {best_assim['emoji']} {best_assim['nome']}</div>
-  <div class='rank-sub'>Razão ganho/perda: {valor_assim_str}</div>
+  <div class='rank-title'>
+    <span class="material-symbols-outlined rank-icon">balance</span>
+    Melhor assimetria — {rank_assim['nome']}
+  </div>
+  <div class='rank-sub'>Razão ganho/perda: {assim_str}</div>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
