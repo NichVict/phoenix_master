@@ -32,27 +32,67 @@ LINK_ASSINAR = "https://app.infinitepay.io/products"
 # 🔐 AUTENTICAÇÃO VIA LINK MÁGICO – V1
 # ======================================
 
+# ======================================
+# 🔐 AUTENTICAÇÃO VIA LINK MÁGICO – DEBUG V1
+# ======================================
+
 from supabase import create_client, Client
 
-# Pegando do secrets.toml
-SUPABASE_URL = st.secrets["SUPABASE_URL_CLIENTES"]
-SUPABASE_KEY = st.secrets["SUPABASE_KEY_CLIENTES"]
+st.write("🔎 DEBUG: Iniciando autenticação...")
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# ==========================
+# 1️⃣ Ler secrets
+# ==========================
+try:
+    SUPABASE_URL = st.secrets["SUPABASE_URL_CLIENTES"]
+    SUPABASE_KEY = st.secrets["SUPABASE_KEY_CLIENTES"]
+except Exception as e:
+    st.error("❌ ERRO: Não foi possível ler os secrets.")
+    st.write(e)
+    SUPABASE_URL = None
+    SUPABASE_KEY = None
+
+st.write("🔎 DEBUG: SUPABASE_URL =", SUPABASE_URL)
+st.write("🔎 DEBUG: SUPABASE_KEY (primeiros 8 chars) =", str(SUPABASE_KEY)[:8] if SUPABASE_KEY else None)
 
 
+# ==========================
+# 2️⃣ Criar client do Supabase
+# ==========================
+try:
+    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    st.write("🔎 DEBUG: Cliente Supabase criado com sucesso.")
+except Exception as e:
+    st.error("❌ ERRO ao criar client Supabase.")
+    st.write(e)
+    supabase = None
+
+
+# ==========================
+# 3️⃣ Função para carregar cliente
+# ==========================
 def carregar_cliente_pelo_token():
-    # Se já carregado na sessão, retorna direto
+
+    # Já carregado antes?
     if "cliente" in st.session_state:
+        st.write("🔎 DEBUG: Cliente já estava no session_state.")
         return st.session_state["cliente"]
 
-    # Lê token da URL (?token=XYZ)
+    # Ler token da URL
     token = st.query_params.get("token", None)
+    st.write("🔎 DEBUG: Token encontrado na URL =", token)
+
     if not token:
+        st.write("🔎 DEBUG: Nenhum token foi encontrado na URL.")
         return None
 
-    # Busca no Supabase → TABELA "clientes"
+    if not supabase:
+        st.error("❌ Supabase não está inicializado.")
+        return None
+
+    # Buscar cliente no Supabase
     try:
+        st.write("🔎 DEBUG: Buscando cliente na tabela 'clientes'...")
         resp = (
             supabase.table("clientes")
             .select("*")
@@ -60,20 +100,31 @@ def carregar_cliente_pelo_token():
             .single()
             .execute()
         )
+        st.write("🔎 DEBUG: Resposta do Supabase:", resp)
         cliente = resp.data
-    except Exception:
+    except Exception as e:
+        st.error("❌ ERRO ao consultar tabela clientes.")
+        st.write(e)
         return None
 
     if not cliente:
+        st.write("🔎 DEBUG: Nenhum cliente encontrado com o token fornecido.")
         return None
 
-    # Grava cliente na sessão
+    # Armazenar na sessão
     st.session_state["cliente"] = cliente
+    st.write("🔎 DEBUG: Cliente salvo no session_state.")
+
     return cliente
 
 
-# Carrega cliente (se houver)
+# ==========================
+# 4️⃣ Carregar cliente
+# ==========================
 cliente = carregar_cliente_pelo_token()
+
+st.write("🔎 DEBUG: Cliente carregado =", cliente)
+
 
 # ============================
 # ÁREA SUPERIOR DO DASHBOARD (V1)
