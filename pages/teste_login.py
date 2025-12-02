@@ -11,7 +11,7 @@ st.write("Versão simplificada para validar autenticação e permissões.")
 
 
 # =================================================
-# 🔗 CREDENCIAIS
+# 🔗 CREDENCIAIS SUPABASE
 # =================================================
 SUPABASE_URL = st.secrets["SUPABASE_URL_CLIENTES"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY_CLIENTES"]
@@ -120,8 +120,10 @@ st.write("### 📁 Acessar Carteiras Liberadas:")
 for cart in carteiras:
     page = MAPA.get(cart)
     if page:
-        # nome do arquivo na pasta pages
-        st.page_link(page + ".py", label=f"➡️ {cart}", icon="📊")
+        # NUNCA adicionar .py — Streamlit não aceita
+        st.page_link(page, label=f"➡️ {cart}", icon="📊")
 
-# Dashboard geral sempre liberado
-st.page_link("dashboard_geral.py", label="🌐 Dashboard Geral (Livre)", icon="🌍")
+# =================================================
+# 🌐 DASHBOARD GERAL (Sempre liberado)
+# =================================================
+st.page_link("dashboard_geral", label="🌐 Dashboard Geral (Livre)", icon="🌍")
