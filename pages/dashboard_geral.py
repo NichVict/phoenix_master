@@ -34,7 +34,7 @@ st.markdown(
     """
 <style>
 
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200" rel="stylesheet">
+
 
 .dashboard-title {
 font-size: 32px;
