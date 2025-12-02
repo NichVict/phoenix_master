@@ -1,6 +1,9 @@
 import streamlit as st
 import requests
 
+# =================================================
+# CONFIG BÁSICA
+# =================================================
 st.set_page_config(page_title="Login Phoenix", layout="wide")
 
 st.title("🔑 Login Phoenix – Acesso via Token (REST)")
@@ -25,7 +28,7 @@ HEADERS = {
 # =================================================
 # FUNÇÃO: Buscar cliente pelo token (REST)
 # =================================================
-def buscar_cliente(token):
+def buscar_cliente(token: str):
     url = REST_URL + f"?token=eq.{token}&select=*"
     st.write("DEBUG → URL:", url)
 
@@ -37,7 +40,12 @@ def buscar_cliente(token):
     if resp.status_code != 200:
         return None
 
-    data = resp.json()
+    try:
+        data = resp.json()
+    except Exception as e:
+        st.write("DEBUG → Erro ao fazer resp.json():", e)
+        return None
+
     if not data:
         return None
 
@@ -54,6 +62,7 @@ st.write("DEBUG → Token recebido:", token)
 
 if not token:
     st.error("❌ Nenhum token encontrado na URL.")
+    st.info("Acesse usando o link mágico enviado ao seu e-mail.")
     st.stop()
 
 
@@ -66,11 +75,15 @@ if not cliente:
     st.error("❌ Token inválido ou cliente não encontrado.")
     st.stop()
 
+
 # =================================================
 # SALVAR NA SESSÃO (ESSENCIAL!)
 # =================================================
 st.session_state["token"] = token
 st.session_state["cliente"] = cliente
+
+st.write("DEBUG → session_state.token =", st.session_state.get("token"))
+st.write("DEBUG → session_state.cliente.nome =", st.session_state["cliente"].get("nome"))
 
 
 # =================================================
@@ -79,8 +92,12 @@ st.session_state["cliente"] = cliente
 st.success(f"🔓 Login reconhecido! Bem-vindo, **{cliente['nome']}**.")
 
 st.write("### 🗂 Suas carteiras:")
-for c in cliente["carteiras"]:
-    st.write(f"✔️ {c}")
+carteiras = cliente.get("carteiras", []) or []
+if not carteiras:
+    st.warning("Nenhuma carteira ativa para este cliente.")
+else:
+    for c in carteiras:
+        st.write(f"✔️ {c}")
 
 st.markdown("---")
 st.write("### 🔍 Dados completos do cliente (debug):")
@@ -91,7 +108,6 @@ st.markdown("---")
 # =================================================
 # 🔗 LINKS PARA PÁGINAS PROTEGIDAS
 # =================================================
-
 MAPA = {
     "Carteira de Ações IBOV": "carteira_ibov",
     "Carteira de BDRs": "carteira_bdr",
@@ -100,64 +116,12 @@ MAPA = {
 }
 
 st.write("### 📁 Acessar Carteiras Liberadas:")
-for cart in cliente["carteiras"]:
-    page = MAPA.get(cart)
-    if page:
-        st.page_link(page + ".py", label=f"➡️ {cart}", icon="📊")
-
-st.page_link("dashboard_geral.py", label="🌐 Dashboard Geral (Livre)", icon="🌍")
-    st.stop()
-
-# =================================================
-# 👤 DADOS DO CLIENTE
-# =================================================
-nome = cliente.get("nome", "Investidor")
-carteiras = cliente.get("carteiras", [])
-
-st.success(f"🔓 Bem-vindo, **{nome}**!")
-
-st.markdown("## 🗂 Suas carteiras ativas:")
-if not carteiras:
-    st.warning("Nenhuma carteira ativa atribuída.")
-else:
-    for c in carteiras:
-        st.write(f"- {c}")
-
-# =================================================
-# 🔗 MAPA DAS PÁGINAS
-# =================================================
-MAPA_PAGINAS = {
-    "Carteira de Ações IBOV": "carteira_ibov",
-    "Carteira de Opções": "carteira_opcoes",
-    "Carteira de Small Caps": "carteira_small",
-    "Carteira de BDRs": "carteira_bdr",
-}
-
-st.markdown("---")
-st.markdown("## 📁 Acessar carteiras")
 
 for cart in carteiras:
-    page = MAPA_PAGINAS.get(cart)
+    page = MAPA.get(cart)
     if page:
-        st.markdown(
-            f"➡️ [{cart}](./{page}?token={token})",
-            unsafe_allow_html=True,
-        )
-    else:
-        st.warning(f"Carteira não mapeada: {cart}")
+        # nome do arquivo na pasta pages
+        st.page_link(page + ".py", label=f"➡️ {cart}", icon="📊")
 
-# =================================================
-# 📊 ACESSO LIVRE AO DASHBOARD (sempre liberado)
-# =================================================
-st.markdown("---")
-st.markdown("## 📊 Acesso ao Dashboard Geral")
-st.markdown(
-    f"➡️ [Dashboard Geral](./dashboard_geral?token={token})"
-)
-
-# =================================================
-# 🔍 DEBUG
-# =================================================
-st.markdown("---")
-st.markdown("### 🔍 Debug – Dados completos do cliente")
-st.json(cliente)
+# Dashboard geral sempre liberado
+st.page_link("dashboard_geral.py", label="🌐 Dashboard Geral (Livre)", icon="🌍")
