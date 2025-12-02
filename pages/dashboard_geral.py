@@ -27,6 +27,85 @@ HEADERS_OP = getattr(supabase_ops_mod, "HEADERS", None)
 
 LINK_ASSINAR = "https://app.infinitepay.io/products"
 
+
+# ======================================
+# 🔐 AUTENTICAÇÃO VIA LINK MÁGICO – V1
+# ======================================
+
+from supabase import create_client, Client
+
+# Pegando do secrets.toml
+SUPABASE_URL = st.secrets["SUPABASE_URL_CLIENTES"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY_CLIENTES"]
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+
+def carregar_cliente_pelo_token():
+    # Se já carregado na sessão, retorna direto
+    if "cliente" in st.session_state:
+        return st.session_state["cliente"]
+
+    # Lê token da URL (?token=XYZ)
+    token = st.query_params.get("token", None)
+    if not token:
+        return None
+
+    # Busca no Supabase → TABELA "clientes"
+    try:
+        resp = (
+            supabase.table("clientes")
+            .select("*")
+            .eq("token", token)
+            .single()
+            .execute()
+        )
+        cliente = resp.data
+    except Exception:
+        return None
+
+    if not cliente:
+        return None
+
+    # Grava cliente na sessão
+    st.session_state["cliente"] = cliente
+    return cliente
+
+
+# Carrega cliente (se houver)
+cliente = carregar_cliente_pelo_token()
+
+# ============================
+# ÁREA SUPERIOR DO DASHBOARD (V1)
+# ============================
+st.markdown("---")
+st.markdown("## Área de Assinaturas")
+
+if cliente:
+    nome = cliente.get("nome", "Investidor")
+    produtos = cliente.get("produtos", [])  # Certifique-se que é lista no Supabase
+
+    st.markdown(f"### 👋 Olá, **{nome}**!")
+    st.write("Essas são as suas assinaturas ativas:")
+
+    MAPA_PRODUTOS = {
+        "Opcoes": "Carteira de Opções",
+        "SmallCaps": "Carteira Small Caps",
+        "IBOV": "Carteira IBOV",
+        "BDR": "Carteira BDR",
+    }
+
+    for cod in produtos:
+        label = MAPA_PRODUTOS.get(cod, cod)
+        st.button(label, key=f"assin_{cod}")
+
+else:
+    st.markdown("### 👋 Olá, visitante!")
+    st.write("Use o link mágico enviado ao seu e-mail para visualizar suas assinaturas.")
+
+
+
+
 # ===========================
 # 🎨 CSS – ESTILO PREMIUM
 # ===========================
