@@ -601,22 +601,24 @@ def barras_lucro_prejuizo(stats):
             y=[bar_prejuizo, bar_lucro],
             text=[label_preju, label_lucro],
             textposition="outside",
-            cliponaxis=False,
+            cliponaxis=False,       # Permite texto sair do limite
             textfont=dict(size=13),
         )
     )
 
     fig.update_layout(
         template="plotly_dark",
-        margin=dict(l=10, r=10, t=20, b=50),  # mais espaço inferior = sem colisão
-        height=220,
+        margin=dict(l=10, r=10, t=20, b=70),  # AUMENTADO = remove sobreposição
+        height=240,
         showlegend=False,
         xaxis=dict(
             title="",
             tickfont=dict(size=13),
-            tickpadding=18,      # empurra o texto pra baixo
+            automargin=True,       # deixa Plotly resolver padding automaticamente
         ),
-        yaxis=dict(title="Retorno ponderado (%)"),
+        yaxis=dict(
+            title="Retorno ponderado (%)",
+        ),
     )
 
     return fig
