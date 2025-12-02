@@ -156,198 +156,207 @@ st.markdown(
     """
 <style>
 
+/* ==== TITULO DASHBOARD ==== */
 .dashboard-title {
-font-size: 32px;
-font-weight: 800;
-color: #fbbf24;
-text-shadow: 0px 0px 12px rgba(251,191,36,0.5);
+    font-size: 32px;
+    font-weight: 800;
+    color: #fbbf24;
+    text-shadow: 0px 0px 12px rgba(251,191,36,0.5);
 }
 
+/* ==== CARDS ==== */
 .card-wrapper {
-background: radial-gradient(circle at top left, #1f2937, #020617);
-border-radius: 18px;
-border: 1px solid rgba(148,163,184,0.45);
-padding: 22px 22px 18px 22px;
-box-shadow: 0 0 18px rgba(0,0,0,0.65);
-margin-bottom: 28px;
+    background: radial-gradient(circle at top left, #1f2937, #020617);
+    border-radius: 18px;
+    border: 1px solid rgba(148,163,184,0.45);
+    padding: 22px 22px 18px 22px;
+    box-shadow: 0 0 18px rgba(0,0,0,0.65);
+    margin-bottom: 28px;
 }
 
 .card-header {
-display:flex;
-justify-content:space-between;
-align-items:flex-start;
-margin-bottom:16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:16px;
 }
 
 .card-title-left {
-display:flex;
-flex-direction:column;
-gap:4px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
 }
 
 .card-title-main {
-font-size: 22px;
-font-weight: 800;
-color:#e5e7eb;
+    font-size: 22px;
+    font-weight: 800;
+    color:#e5e7eb;
 }
 
 .card-tag {
-font-size: 12px;
-text-transform: uppercase;
-letter-spacing: .08em;
-color:#9ca3af;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color:#9ca3af;
 }
 
+/* ==== SCORE BADGE ==== */
 .score-badge {
-min-width:110px;
-text-align:right;
+    min-width:110px;
+    text-align:right;
 }
 
 .score-label {
-font-size:11px;
-color:#9ca3af;
-text-transform:uppercase;
+    font-size:11px;
+    color:#9ca3af;
+    text-transform:uppercase;
 }
 
 .score-value {
-font-size:26px;
-font-weight:900;
+    font-size:26px;
+    font-weight:900;
 }
 
 .score-bar-outer {
-margin-top:6px;
-width:100%;
-height:7px;
-border-radius:999px;
-background:rgba(31,41,55,0.9);
-overflow:hidden;
+    margin-top:6px;
+    width:100%;
+    height:7px;
+    border-radius:999px;
+    background:rgba(31,41,55,0.9);
+    overflow:hidden;
 }
 
 .score-bar-inner {
-height:100%;
-border-radius:999px;
+    height:100%;
+    border-radius:999px;
 }
 
+/* ==== METRICS ==== */
 .metrics-grid {
-display:grid;
-grid-template-columns: repeat(3, minmax(0,1fr));
-gap:10px;
-margin-top:6px;
-margin-bottom:10px;
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap:10px;
+    margin-top:6px;
+    margin-bottom:10px;
 }
 
 .metric-box {
-background: rgba(15,23,42,0.95);
-border-radius:10px;
-padding:7px 10px;
-border:1px solid rgba(55,65,81,0.8);
+    background: rgba(15,23,42,0.95);
+    border-radius:10px;
+    padding:7px 10px;
+    border:1px solid rgba(55,65,81,0.8);
 }
 
 .metric-label {
-font-size:11px;
-color:#9ca3af;
-text-transform:uppercase;
+    font-size:11px;
+    color:#9ca3af;
+    text-transform:uppercase;
 }
 
 .metric-value {
-font-size:17px;
-font-weight:700;
+    font-size:17px;
+    font-weight:700;
 }
 
 .metric-sub {
-font-size:11px;
-color:#6b7280;
+    font-size:11px;
+    color:#6b7280;
 }
 
 .card-desc {
-margin-top:6px;
-font-size:12px;
-color:#d1d5db;
+    margin-top:6px;
+    font-size:12px;
+    color:#d1d5db;
 }
 
+/* ==== BOTÃO ==== */
 .btn-assinar {
-margin-top:10px;
-display:inline-block;
-padding:8px 16px;
-border-radius:999px;
-background:linear-gradient(90deg,#f59e0b,#ef4444);
-color:white !important;
-font-size:12px;
-font-weight:900;
-text-transform:uppercase;
-letter-spacing:.09em;
-text-decoration:none !important;
-transition:all .18s ease-out;
+    margin-top:10px;
+    display:inline-block;
+    padding:8px 16px;
+    border-radius:999px;
+    background:linear-gradient(90deg,#f59e0b,#ef4444);
+    color:white !important;
+    font-size:12px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.09em;
+    text-decoration:none !important;
+    transition:all .18s ease-out;
 }
 
 .btn-assinar:hover {
-transform:translateY(-1px) scale(1.03);
-box-shadow:0 0 14px rgba(248,113,113,0.8);
+    transform:translateY(-1px) scale(1.03);
+    box-shadow:0 0 14px rgba(248,113,113,0.8);
 }
 
+/* ==== GRÁFICOS ==== */
 .charts-row {
-display:grid;
-grid-template-columns: 1.3fr .7fr;
-gap:12px;
-margin-top:10px;
+    display:grid;
+    grid-template-columns: 1.3fr .7fr;
+    gap:12px;
+    margin-top:10px;
 }
 
+/* ==== RANKING ==== */
 .rank-box {
-background: rgba(15,23,42,0.95);
-border-radius:14px;
-padding:16px 18px;
-border:1px solid rgba(75,85,99,0.9);
-margin-top:6px;
+    background: rgba(15,23,42,0.95);
+    border-radius:14px;
+    padding:16px 18px;
+    border:1px solid rgba(75,85,99,0.9);
+    margin-top:6px;
 }
 
+/* 🔥 DEFINIÇÃO ÚNICA DE .rank-title (REMOVIDO O DUPLICADO) */
 .rank-title {
-font-size:18px;
-font-weight:700;
-color:#e5e7eb;
-margin-bottom:8px;
+    font-size:17px;
+    font-weight:600;
+    color:#e5e7eb;
+    margin-bottom:4px;
 }
 
 .rank-line {
-font-size:13px;
-color:#d1d5db;
-margin:2px 0;
+    font-size:13px;
+    color:#d1d5db;
+    margin:2px 0;
 }
 
 .rank-tag {
-font-size:11px;
-text-transform:uppercase;
-color:#9ca3af;
+    font-size:11px;
+    text-transform:uppercase;
+    color:#9ca3af;
 }
 
+/* GLOBAL SCORE */
 .global-score-wrap {
-background: radial-gradient(circle at top left, #111827, #020617);
-border-radius:18px;
-border:1px solid rgba(148,163,184,0.6);
-padding:18px 20px;
-margin-top:18px;
-box-shadow:0 0 20px rgba(0,0,0,0.75);
+    background: radial-gradient(circle at top left, #111827, #020617);
+    border-radius:18px;
+    border:1px solid rgba(148,163,184,0.6);
+    padding:18px 20px;
+    margin-top:18px;
+    box-shadow:0 0 20px rgba(0,0,0,0.75);
 }
 
 .global-score-value {
-font-size:32px;
-font-weight:900;
+    font-size:32px;
+    font-weight:900;
 }
 
 .global-score-bar-outer {
-margin-top:10px;
-width:100%;
-height:10px;
-border-radius:999px;
-background:#020617;
-overflow:hidden;
+    margin-top:10px;
+    width:100%;
+    height:10px;
+    border-radius:999px;
+    background:#020617;
+    overflow:hidden;
 }
 
 .global-score-bar-inner {
-height:100%;
-border-radius:999px;
+    height:100%;
+    border-radius:999px;
 }
 
-/* ===== PRIME CARDS DO RANKING ===== */
+/* ==== CARD DO RANKING ==== */
 .rank-card {
     background: rgba(10,15,25,0.75);
     border: 1px solid rgba(120,130,150,0.22);
@@ -361,13 +370,6 @@ border-radius:999px;
     background: rgba(14,20,30,0.90);
     border-color: rgba(150,160,180,0.30);
     transform: translateY(-1px);
-}
-
-.rank-title {
-    font-size: 17px;
-    font-weight: 600;
-    color: #e5e7eb;
-    margin-bottom: 4px;
 }
 
 .rank-sub {
@@ -386,6 +388,7 @@ border-radius:999px;
 """,
     unsafe_allow_html=True,
 )
+
 
 # ===========================
 # 🦅 TÍTULO
