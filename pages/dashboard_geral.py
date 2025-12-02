@@ -226,35 +226,41 @@ border-radius:999px;
 }
 
 /* ===== PRIME CARDS DO RANKING ===== */
+/* ===== Ranking Institucional ===== */
 .rank-card {
-    background: radial-gradient(circle at top left, #111827, #020617);
-    border: 1px solid rgba(148,163,184,0.35);
-    border-radius: 22px;
+    background: rgba(10,15,25,0.75);
+    border: 1px solid rgba(120,130,150,0.22);
+    border-radius: 14px;
     padding: 18px 22px;
-    margin-bottom: 22px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.4);
-    transition: all 0.20s ease-out;
+    margin-bottom: 18px;
+    transition: all 0.18s ease-out;
 }
 
 .rank-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0 20px rgba(0,0,0,0.55);
+    background: rgba(14,20,30,0.90);
+    border-color: rgba(150,160,180,0.30);
+    transform: translateY(-1px);
 }
 
 .rank-title {
-    font-size: 20px;
-    font-weight: 800;
+    font-size: 17px;
+    font-weight: 600;
     color: #e5e7eb;
-    display:flex;
-    align-items:center;
-    gap:10px;
+    margin-bottom: 4px;
 }
 
 .rank-sub {
     font-size: 14px;
+    font-weight: 400;
     color: #9ca3af;
-    margin-top:6px;
 }
+
+.rank-icon {
+    font-size: 17px;
+    opacity: 0.75;
+    margin-right: 6px;
+}
+
 
 
 
