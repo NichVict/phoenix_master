@@ -496,13 +496,14 @@ def phoenix_score(stats, resumo_estado):
         trades = stats["qtd_trades"]
         ativos = resumo_estado["total"]
 
-        comp_lucro = max(min(lt / 5.0, 30.0), -20.0)
-        comp_media = max(min(media * 0.8, 25.0), -15.0)
-        comp_win = (win - 0.5) * 80.0
-        comp_trades = min(trades * 2.0, 20.0)
-        comp_ativos = min(ativos * 1.5, 15.0)
-
+        comp_lucro = max(min(lt / 12.0, 20.0), -10.0)       # antes: /5 → agora mais difícil
+        comp_media = max(min(media * 0.4, 15.0), -10.0)     # antes: *0.8 → agora metade
+        comp_win = (win - 0.55) * 60.0                      # antes: -0.5 e 80pts → mais exigente
+        comp_trades = min(trades * 1.0, 10.0)               # antes: *2 → agora menos impacto
+        comp_ativos = min(ativos * 1.0, 10.0)               # antes: 1.5 → menor peso
+        
         score = 50.0 + comp_lucro + comp_media + comp_win + comp_trades + comp_ativos
+
 
     return max(0.0, min(100.0, round(score, 1)))
 
