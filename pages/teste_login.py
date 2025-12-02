@@ -1,39 +1,80 @@
 import streamlit as st
 import requests
 
+st.set_page_config(page_title="Teste Login REST", layout="centered")
+
+# =================================================
+# CONFIG (iguais ao CRM)
+# =================================================
 SUPABASE_URL = st.secrets["SUPABASE_URL_CLIENTES"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY_CLIENTES"]
 
-REST_URL = f"{SUPABASE_URL}/rest/v1/clientes"
+TABLE = "clientes"
+
+REST_URL = f"{SUPABASE_URL}/rest/v1/{TABLE}"
+
 HEADERS = {
     "apikey": SUPABASE_KEY,
     "Authorization": f"Bearer {SUPABASE_KEY}",
 }
 
-def buscar_cliente(token):
-    url = f"{REST_URL}?token=eq.{token}&select=*"
-    r = requests.get(url, headers=HEADERS)
-    if r.status_code != 200:
-        return None
-    data = r.json()
-    return data[0] if data else None
 
+st.title("🔎 Teste Login via REST (sem supabase-py)")
+st.write("Usando a API REST nativa do Supabase")
+
+
+# =================================================
+# FUNÇÃO → Buscar cliente pelo token
+# =================================================
+def buscar_cliente(token):
+    query = f"?token=eq.{token}&select=*"
+
+    url = REST_URL + query
+    st.write("DEBUG → URL:", url)
+
+    resp = requests.get(url, headers=HEADERS)
+
+    st.write("DEBUG → Status:", resp.status_code)
+    st.write("DEBUG → Conteúdo bruto:", resp.text)
+
+    if resp.status_code != 200:
+        return None
+
+    data = resp.json()
+
+    if not data:
+        return None
+
+    return data[0]  # único registro
+
+
+# =================================================
+# Capturar token da URL
+# =================================================
 params = st.query_params
-token = params.get("token")
+token = params.get("token", None)
+
+st.write("DEBUG → Token:", token)
 
 if not token:
-    st.error("❌ Acesso bloqueado. Token ausente.")
+    st.warning("Nenhum token encontrado.")
     st.stop()
 
+
+# =================================================
+# Buscar cliente
+# =================================================
 cliente = buscar_cliente(token)
 
+st.markdown("---")
+
 if not cliente:
-    st.error("❌ Token inválido ou expirado.")
-    st.stop()
+    st.error("❌ Nenhum cliente encontrado para esse token.")
+else:
+    st.success("Cliente encontrado!")
+    st.json(cliente)
 
-if "Carteira de BDRs" not in cliente.get("carteiras", []):
-    st.error("❌ Você não possui acesso à Carteira de BDRs.")
-    st.markdown(f"[Voltar ao login](./teste_login?token={token})")
-    st.stop()
-
-st.success(f"🔓 Acesso autorizado — Bem-vindo, {cliente['nome']}!")
+    carteiras = cliente.get("carteiras", [])
+    st.write("### Carteiras:")
+    for c in carteiras:
+        st.write(f"- {c}")
