@@ -1,5 +1,3 @@
-atualize pra mim
-
 
 # --- CORE STREAMLIT / UI ---
 streamlit
