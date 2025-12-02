@@ -1,3 +1,6 @@
+atualize pra mim
+
+
 # --- CORE STREAMLIT / UI ---
 streamlit
 streamlit-autorefresh
@@ -27,11 +30,8 @@ schedule
 lxml
 scipy
 tenacity
+supabase
 psycopg2-binary
-
-# --- SUPABASE (VERSÕES OBRIGATÓRIAS - compatíveis com CRM) ---
-supabase==2.4.7
-gotrue==2.5.2
 
 # --- PDF / RELATÓRIO ---
 reportlab
@@ -40,5 +40,4 @@ weasyprint
 # --- TELEGRAM ---
 python-telegram-bot==20.7
 
-# --- ENV ---
 python-dotenv
