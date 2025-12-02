@@ -1,5 +1,7 @@
 import streamlit as st
 import requests
+import datetime
+
 
 st.set_page_config(page_title="Dashboard Geral", layout="wide")
 
