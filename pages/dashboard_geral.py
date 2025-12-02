@@ -224,6 +224,41 @@ overflow:hidden;
 height:100%;
 border-radius:999px;
 }
+
+/* ===== PRIME CARDS DO RANKING ===== */
+.rank-card {
+    background: radial-gradient(circle at top left, #111827, #020617);
+    border: 1px solid rgba(148,163,184,0.35);
+    border-radius: 22px;
+    padding: 18px 22px;
+    margin-bottom: 22px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.4);
+    transition: all 0.20s ease-out;
+}
+
+.rank-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0,0,0,0.55);
+}
+
+.rank-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #e5e7eb;
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.rank-sub {
+    font-size: 14px;
+    color: #9ca3af;
+    margin-top:6px;
+}
+
+
+
+
 </style>
 """,
     unsafe_allow_html=True,
@@ -412,6 +447,27 @@ def build_stats_opcoes_30d():
     }
 
 
+def assimetria(stats):
+    """
+    Razão ganho/perda (Gain/Loss Ratio):
+    > 1 = carteira assimétrica positiva.
+    < 1 = perdas maiores que ganhos.
+    """
+    if not stats["has_data"]:
+        return 0.0
+
+    valores = [p["pct"] for p in stats["sparkline"]]
+
+    ganhos = [v for v in valores if v > 0]
+    perdas = [-v for v in valores if v < 0]
+
+    total_ganhos = sum(ganhos)
+    total_perdas = sum(perdas)
+
+    if total_perdas == 0:
+        return float('inf')  # se não teve perda nenhuma, assimetria infinita
+
+    return total_ganhos / total_perdas
 
 
 
@@ -861,50 +917,57 @@ for card in cards_data:
 # 🏆 RANKING + TOP TRADES + SCORE GLOBAL (RODAPÉ)
 # ===========================
 st.markdown("---")
+# ===========================
+# 🏆 RANKING PHOENIX — PREMIUM
+# ===========================
 st.markdown("## 🏆 Ranking Phoenix — Últimos 30 dias")
 
-# ranking por score
+# 1) Melhor Phoenix Score (força geral)
 rank_score = sorted(cards_data, key=lambda c: c["score"], reverse=True)
-
 best_score = rank_score[0]
-st.markdown(
-    f"<div class='rank-box'><div class='rank-title'>🥇 Melhor carteira geral: {best_score['emoji']} {best_score['nome']}</div>"
-    f"<div class='rank-line'><span class='rank-tag'>Phoenix Score</span> {best_score['score']}</div>"
-    f"</div>",
-    unsafe_allow_html=True,
-)
 
-# ranking por lucro total
-rank_lucro = sorted(
-    cards_data,
-    key=lambda c: c["stats"]["lucro_total_pct"],
-    reverse=True,
-)
+st.markdown(f"""
+<div class='rank-card'>
+  <div class='rank-title'>🥇 Melhor carteira geral — {best_score['emoji']} {best_score['nome']}</div>
+  <div class='rank-sub'>Phoenix Score: {best_score['score']}</div>
+</div>
+""", unsafe_allow_html=True)
 
+# 2) Maior lucro total
+rank_lucro = sorted(cards_data, key=lambda c: c["stats"]["lucro_total_pct"], reverse=True)
 best_lucro = rank_lucro[0]
-st.markdown(
-    f"<div class='rank-box'>"
-    f"<div class='rank-title'>📈 Carteira com maior lucro 30d: {best_lucro['emoji']} {best_lucro['nome']}</div>"
-    f"<div class='rank-line'><span class='rank-tag'>Lucro total 30d</span> {best_lucro['stats']['lucro_total_pct']:.1f}%</div>"
-    f"</div>",
-    unsafe_allow_html=True,
-)
 
-# ranking por winrate
-rank_win = sorted(
-    cards_data,
-    key=lambda c: c['stats']['winrate'],
-    reverse=True,
-)
+st.markdown(f"""
+<div class='rank-card'>
+  <div class='rank-title'>💰 Maior lucro 30d — {best_lucro['emoji']} {best_lucro['nome']}</div>
+  <div class='rank-sub'>Lucro total: {best_lucro['stats']['lucro_total_pct']:.1f}%</div>
+</div>
+""", unsafe_allow_html=True)
 
+# 3) Melhor winrate (consistência)
+rank_win = sorted(cards_data, key=lambda c: c["stats"]["winrate"], reverse=True)
 best_win = rank_win[0]
-st.markdown(
-    f"<div class='rank-box'>"
-    f"<div class='rank-title'>🎯 Melhor winrate 30d: {best_win['emoji']} {best_win['nome']}</div>"
-    f"<div class='rank-line'><span class='rank-tag'>Winrate</span> {(best_win['stats']['winrate']*100.0):.1f}%</div>"
-    f"</div>",
-    unsafe_allow_html=True,
-)
+
+st.markdown(f"""
+<div class='rank-card'>
+  <div class='rank-title'>🎯 Melhor winrate 30d — {best_win['emoji']} {best_win['nome']}</div>
+  <div class='rank-sub'>Winrate: {(best_win['stats']['winrate']*100):.1f}%</div>
+</div>
+""", unsafe_allow_html=True)
+
+# 4) Melhor Assimetria Positiva (qualidade operacional)
+rank_assimetria = sorted(cards_data, key=lambda c: assimetria(c["stats"]), reverse=True)
+best_assim = rank_assimetria[0]
+
+valor_assim = assimetria(best_assim["stats"])
+valor_assim_str = "∞" if valor_assim == float('inf') else f"{valor_assim:.2f}x"
+
+st.markdown(f"""
+<div class='rank-card'>
+  <div class='rank-title'>⚖️ Melhor assimetria — {best_assim['emoji']} {best_assim['nome']}</div>
+  <div class='rank-sub'>Razão ganho/perda: {valor_assim_str}</div>
+</div>
+""", unsafe_allow_html=True)
 
 
 
