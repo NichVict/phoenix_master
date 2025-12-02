@@ -576,33 +576,49 @@ def barras_lucro_prejuizo(stats):
     else:
         valores = [p["pct"] for p in stats["sparkline"]]
 
+    # Separa lucros e prejuízos
     prejuizos = [-v for v in valores if v < 0]
     lucros = [v for v in valores if v > 0]
 
-    media_prejuizo = (sum(prejuizos) / len(prejuizos)) if prejuizos else 0
-    media_lucro = (sum(lucros) / len(lucros)) if lucros else 0
+    qtd_prej = len(prejuizos)
+    qtd_lucro = len(lucros)
+
+    media_prejuizo = (sum(prejuizos) / qtd_prej) if qtd_prej else 0
+    media_lucro = (sum(lucros) / qtd_lucro) if qtd_lucro else 0
+
+    # ====== APLICAÇÃO DO PESO ======
+    bar_prejuizo = -(abs(media_prejuizo) * qtd_prej)
+    bar_lucro = media_lucro * qtd_lucro
+
+    # Texto sempre exibido
+    label_preju = f"-{abs(media_prejuizo):.2f}% × {qtd_prej} = {bar_prejuizo:.2f}%"
+    label_lucro = f"{media_lucro:.2f}% × {qtd_lucro} = {bar_lucro:.2f}%"
 
     fig = go.Figure()
     fig.add_trace(
         go.Bar(
             x=["Média Prejuízo", "Média Lucro"],
-            y=[-abs(media_prejuizo), media_lucro],
-            text=[f"-{abs(media_prejuizo):.2f}%", f"{media_lucro:.2f}%"],
+            y=[bar_prejuizo, bar_lucro],
+            text=[label_preju, label_lucro],
             textposition="outside",
-            insidetextanchor="middle",
-            cliponaxis=False,  # permite texto sair do canvas
-            textfont=dict(size=14),
+            cliponaxis=False,
+            textfont=dict(size=13),
         )
     )
 
     fig.update_layout(
         template="plotly_dark",
-        margin=dict(l=10, r=10, t=20, b=20),
-        height=190,
+        margin=dict(l=10, r=10, t=20, b=50),  # mais espaço inferior = sem colisão
+        height=220,
         showlegend=False,
-        xaxis=dict(title=""),
-        yaxis=dict(title="Retorno médio (%)"),
+        xaxis=dict(
+            title="",
+            tickfont=dict(size=13),
+            tickpadding=18,      # empurra o texto pra baixo
+        ),
+        yaxis=dict(title="Retorno ponderado (%)"),
     )
+
     return fig
 
 
