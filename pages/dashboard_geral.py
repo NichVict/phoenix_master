@@ -1,362 +1,242 @@
-import streamlit as st
-import requests
+
+# ultimo dashboard geral sem credencial clientes #
+
 import datetime
 import pandas as pd
 import plotly.graph_objects as go
+import streamlit as st
 
 from carteiras_bridge import (
     curto_state,
     loss_state,
     get_indice_ativo,
+    supabase_select,
 )
 
-# ==========================================
-# 🔧 CONFIGURAÇÃO BÁSICA
-# ==========================================
-st.set_page_config(page_title="Dashboard Geral", layout="wide")
 
-st.title("📊 Dashboard Geral – Projeto Phoenix")
-st.write("Versão com login via token + dados do Phoenix por REST.")
 
-# =================================================
-# 🔗 CREDENCIAIS SUPABASE
-#   - CLIENTES (CRM)
-#   - DADOS (OPERACOES / OPCOES)
-#   (hoje é o mesmo projeto, mas deixo separado)
-# =================================================
-SUPABASE_URL_CLIENTES = st.secrets["SUPABASE_URL_CLIENTES"]
-SUPABASE_KEY_CLIENTES = st.secrets["SUPABASE_KEY_CLIENTES"]
+import requests
+import fenix_opcoes.supabase_ops as supabase_ops_mod
 
-SUPABASE_URL_DATA = st.secrets.get("SUPABASE_URL", SUPABASE_URL_CLIENTES)
-SUPABASE_KEY_DATA = st.secrets.get("SUPABASE_KEY", SUPABASE_KEY_CLIENTES)
+# ===== IMPORT PARA TABELA SQL DE OPÇÕES =====
+def supabase_select_opcoes(query_string: str):
+    """
+    Wrapper igual ao supabase_select, mas apontando para a tabela opcoes_operacoes.
+    """
+    return supabase_select("opcoes_operacoes", query_string)
 
-# ENDPOINTS REST
-REST_URL_CLIENTES = f"{SUPABASE_URL_CLIENTES}/rest/v1/clientes"
-REST_BASE_DATA = f"{SUPABASE_URL_DATA}/rest/v1"
+REST_ENDPOINT_OP = getattr(supabase_ops_mod, "REST_ENDPOINT", None)
+HEADERS_OP = getattr(supabase_ops_mod, "HEADERS", None)
 
-# HEADERS
-HEADERS_CLIENTES = {
-    "apikey": SUPABASE_KEY_CLIENTES,
-    "Authorization": f"Bearer {SUPABASE_KEY_CLIENTES}",
-}
-
-HEADERS_DATA = {
-    "apikey": SUPABASE_KEY_DATA,
-    "Authorization": f"Bearer {SUPABASE_KEY_DATA}",
-}
-
-# =================================================
-# FUNÇÃO GENÉRICA: SELECT VIA REST (TABELAS DE DADOS)
-# =================================================
-def supabase_rest_select(table: str, query_string: str):
-    url = f"{REST_BASE_DATA}/{table}{query_string}"
-    st.write(f"DEBUG REST {table} → URL:", url)
-
-    resp = requests.get(url, headers=HEADERS_DATA)
-    st.write(f"DEBUG REST {table} → Status:", resp.status_code)
-
-    if resp.status_code != 200:
-        st.write(f"DEBUG REST {table} → Erro:", resp.text)
-        return []
-
-    try:
-        data = resp.json()
-    except Exception as e:
-        st.write(f"DEBUG REST {table} → Falha ao parsear JSON:", e)
-        st.write("DEBUG REST raw →", resp.text)
-        return []
-
-    if not data:
-        st.write(f"DEBUG REST {table} → Nenhum registro retornado.")
-        return []
-
-    return data
-
-# =================================================
-# FUNÇÃO: Buscar cliente pelo token (REST)
-# =================================================
-def buscar_cliente(token: str):
-    query = f"?token=eq.{token}&select=*"
-    url = REST_URL_CLIENTES + query
-
-    st.write("DEBUG CLIENTE → URL:", url)
-
-    resp = requests.get(url, headers=HEADERS_CLIENTES)
-
-    st.write("DEBUG CLIENTE → Status:", resp.status_code)
-    st.write("DEBUG CLIENTE → Conteúdo bruto:", resp.text)
-
-    if resp.status_code != 200:
-        return None
-
-    try:
-        data = resp.json()
-    except Exception as e:
-        st.write("DEBUG CLIENTE → erro ao parsear JSON:", e)
-        return None
-
-    if not data:
-        return None
-
-    return data[0]
-
-# =================================================
-# 🔐 CAPTURAR TOKEN
-# =================================================
-params = st.query_params
-token = params.get("token", None)
-
-st.write("DEBUG → Token recebido:", token)
-
-if not token:
-    st.error("❌ Nenhum token encontrado na URL.")
-    st.info("Acesse usando o link mágico enviado ao seu e-mail.")
-    st.stop()
-
-# =================================================
-# 🔐 CARREGAR CLIENTE
-# =================================================
-cliente = buscar_cliente(token)
-
-st.markdown("---")
-
-if not cliente:
-    st.error("❌ Nenhum cliente encontrado para esse token.")
-    st.stop()
-
-# =================================================
-# 👤 EXIBIR INFORMAÇÕES DO CLIENTE
-# =================================================
-nome = cliente.get("nome", "Investidor")
-carteiras_cliente = cliente.get("carteiras", [])
-
-st.success(f"🔓 Login reconhecido! Bem-vindo, **{nome}**.")
-st.write("### 🗂 Suas carteiras:")
-
-if not carteiras_cliente:
-    st.warning("Nenhuma carteira ativa.")
-else:
-    for c in carteiras_cliente:
-        st.write(f"- {c}")
-
-st.markdown("---")
-
-st.write("### 🔍 Dados completos do cliente (debug):")
-st.json(cliente)
-
-# =================================================
-# 🔗 LINK ASSINAR (MANTIDO)
-# =================================================
 LINK_ASSINAR = "https://app.infinitepay.io/products"
 
-# =================================================
-# 🎨 CSS – ESTILO PREMIUM (MANTIDO)
-# =================================================
+
+
+
+
+# ===========================
+# 🎨 CSS – ESTILO PREMIUM
+# ===========================
 st.markdown(
     """
 <style>
 
-/* ==== TITULO DASHBOARD ==== */
+
+
 .dashboard-title {
-    font-size: 32px;
-    font-weight: 800;
-    color: #fbbf24;
-    text-shadow: 0px 0px 12px rgba(251,191,36,0.5);
+font-size: 32px;
+font-weight: 800;
+color: #fbbf24;
+text-shadow: 0px 0px 12px rgba(251,191,36,0.5);
 }
 
-/* ==== CARDS ==== */
 .card-wrapper {
-    background: radial-gradient(circle at top left, #1f2937, #020617);
-    border-radius: 18px;
-    border: 1px solid rgba(148,163,184,0.45);
-    padding: 22px 22px 18px 22px;
-    box-shadow: 0 0 18px rgba(0,0,0,0.65);
-    margin-bottom: 28px;
+background: radial-gradient(circle at top left, #1f2937, #020617);
+border-radius: 18px;
+border: 1px solid rgba(148,163,184,0.45);
+padding: 22px 22px 18px 22px;
+box-shadow: 0 0 18px rgba(0,0,0,0.65);
+margin-bottom: 28px;
 }
 
 .card-header {
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    margin-bottom:16px;
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+margin-bottom:16px;
 }
 
 .card-title-left {
-    display:flex;
-    flex-direction:column;
-    gap:4px;
+display:flex;
+flex-direction:column;
+gap:4px;
 }
 
 .card-title-main {
-    font-size: 22px;
-    font-weight: 800;
-    color:#e5e7eb;
+font-size: 22px;
+font-weight: 800;
+color:#e5e7eb;
 }
 
 .card-tag {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    color:#9ca3af;
+font-size: 12px;
+text-transform: uppercase;
+letter-spacing: .08em;
+color:#9ca3af;
 }
 
-/* ==== SCORE BADGE ==== */
 .score-badge {
-    min-width:110px;
-    text-align:right;
+min-width:110px;
+text-align:right;
 }
 
 .score-label {
-    font-size:11px;
-    color:#9ca3af;
-    text-transform:uppercase;
+font-size:11px;
+color:#9ca3af;
+text-transform:uppercase;
 }
 
 .score-value {
-    font-size:26px;
-    font-weight:900;
+font-size:26px;
+font-weight:900;
 }
 
 .score-bar-outer {
-    margin-top:6px;
-    width:100%;
-    height:7px;
-    border-radius:999px;
-    background:rgba(31,41,55,0.9);
-    overflow:hidden;
+margin-top:6px;
+width:100%;
+height:7px;
+border-radius:999px;
+background:rgba(31,41,55,0.9);
+overflow:hidden;
 }
 
 .score-bar-inner {
-    height:100%;
-    border-radius:999px;
+height:100%;
+border-radius:999px;
 }
 
-/* ==== METRICS ==== */
 .metrics-grid {
-    display:grid;
-    grid-template-columns: repeat(3, minmax(0,1fr));
-    gap:10px;
-    margin-top:6px;
-    margin-bottom:10px;
+display:grid;
+grid-template-columns: repeat(3, minmax(0,1fr));
+gap:10px;
+margin-top:6px;
+margin-bottom:10px;
 }
 
 .metric-box {
-    background: rgba(15,23,42,0.95);
-    border-radius:10px;
-    padding:7px 10px;
-    border:1px solid rgba(55,65,81,0.8);
+background: rgba(15,23,42,0.95);
+border-radius:10px;
+padding:7px 10px;
+border:1px solid rgba(55,65,81,0.8);
 }
 
 .metric-label {
-    font-size:11px;
-    color:#9ca3af;
-    text-transform:uppercase;
+font-size:11px;
+color:#9ca3af;
+text-transform:uppercase;
 }
 
 .metric-value {
-    font-size:17px;
-    font-weight:700;
+font-size:17px;
+font-weight:700;
 }
 
 .metric-sub {
-    font-size:11px;
-    color:#6b7280;
+font-size:11px;
+color:#6b7280;
 }
 
 .card-desc {
-    margin-top:6px;
-    font-size:12px;
-    color:#d1d5db;
+margin-top:6px;
+font-size:12px;
+color:#d1d5db;
 }
 
-/* ==== BOTÃO ==== */
 .btn-assinar {
-    margin-top:10px;
-    display:inline-block;
-    padding:8px 16px;
-    border-radius:999px;
-    background:linear-gradient(90deg,#f59e0b,#ef4444);
-    color:white !important;
-    font-size:12px;
-    font-weight:900;
-    text-transform:uppercase;
-    letter-spacing:.09em;
-    text-decoration:none !important;
-    transition:all .18s ease-out;
+margin-top:10px;
+display:inline-block;
+padding:8px 16px;
+border-radius:999px;
+background:linear-gradient(90deg,#f59e0b,#ef4444);
+color:white !important;
+font-size:12px;
+font-weight:900;
+text-transform:uppercase;
+letter-spacing:.09em;
+text-decoration:none !important;   /* 👈 FORÇA O NÃO-SUBLINHADO */
+transition:all .18s ease-out;
 }
+
 
 .btn-assinar:hover {
-    transform:translateY(-1px) scale(1.03);
-    box-shadow:0 0 14px rgba(248,113,113,0.8);
+transform:translateY(-1px) scale(1.03);
+box-shadow:0 0 14px rgba(248,113,113,0.8);
 }
 
-/* ==== GRÁFICOS ==== */
 .charts-row {
-    display:grid;
-    grid-template-columns: 1.3fr .7fr;
-    gap:12px;
-    margin-top:10px;
+display:grid;
+grid-template-columns: 1.3fr .7fr;
+gap:12px;
+margin-top:10px;
 }
 
-/* ==== RANKING ==== */
 .rank-box {
-    background: rgba(15,23,42,0.95);
-    border-radius:14px;
-    padding:16px 18px;
-    border:1px solid rgba(75,85,99,0.9);
-    margin-top:6px;
+background: rgba(15,23,42,0.95);
+border-radius:14px;
+padding:16px 18px;
+border:1px solid rgba(75,85,99,0.9);
+margin-top:6px;
 }
 
-/* 🔥 DEFINIÇÃO ÚNICA DE .rank-title (REMOVIDO O DUPLICADO) */
 .rank-title {
-    font-size:17px;
-    font-weight:600;
-    color:#e5e7eb;
-    margin-bottom:4px;
+font-size:18px;
+font-weight:700;
+color:#e5e7eb;
+margin-bottom:8px;
 }
 
 .rank-line {
-    font-size:13px;
-    color:#d1d5db;
-    margin:2px 0;
+font-size:13px;
+color:#d1d5db;
+margin:2px 0;
 }
 
 .rank-tag {
-    font-size:11px;
-    text-transform:uppercase;
-    color:#9ca3af;
+font-size:11px;
+text-transform:uppercase;
+color:#9ca3af;
 }
 
-/* GLOBAL SCORE */
 .global-score-wrap {
-    background: radial-gradient(circle at top left, #111827, #020617);
-    border-radius:18px;
-    border:1px solid rgba(148,163,184,0.6);
-    padding:18px 20px;
-    margin-top:18px;
-    box-shadow:0 0 20px rgba(0,0,0,0.75);
+background: radial-gradient(circle at top left, #111827, #020617);
+border-radius:18px;
+border:1px solid rgba(148,163,184,0.6);
+padding:18px 20px;
+margin-top:18px;
+box-shadow:0 0 20px rgba(0,0,0,0.75);
 }
 
 .global-score-value {
-    font-size:32px;
-    font-weight:900;
+font-size:32px;
+font-weight:900;
 }
 
 .global-score-bar-outer {
-    margin-top:10px;
-    width:100%;
-    height:10px;
-    border-radius:999px;
-    background:#020617;
-    overflow:hidden;
+margin-top:10px;
+width:100%;
+height:10px;
+border-radius:999px;
+background:#020617;
+overflow:hidden;
 }
 
 .global-score-bar-inner {
-    height:100%;
-    border-radius:999px;
+height:100%;
+border-radius:999px;
 }
 
-/* ==== CARD DO RANKING ==== */
+/* ===== PRIME CARDS DO RANKING ===== */
+/* ===== Ranking Institucional ===== */
 .rank-card {
     background: rgba(10,15,25,0.75);
     border: 1px solid rgba(120,130,150,0.22);
@@ -372,6 +252,13 @@ st.markdown(
     transform: translateY(-1px);
 }
 
+.rank-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin-bottom: 4px;
+}
+
 .rank-sub {
     font-size: 14px;
     font-weight: 400;
@@ -384,11 +271,14 @@ st.markdown(
     margin-right: 6px;
 }
 
+
+
+
+
 </style>
 """,
     unsafe_allow_html=True,
 )
-
 
 # ===========================
 # 🦅 TÍTULO
@@ -420,25 +310,21 @@ def resumo_carteira_estado(indice: str):
     }
 
 # ===========================
-# 📊 30 DIAS – OPERACOES (REST)
+# 📊 30 DIAS – SUPABASE
 # ===========================
 def load_ops_30d():
     hoje = datetime.date.today()
     inicio_30d = hoje - datetime.timedelta(days=30)
-
-    q = (
+    dados = supabase_select(
+        "operacoes_encerradas",
         f"?select=*"
         f"&data_fechamento=gte.{inicio_30d}T00:00:00"
-        f"&data_fechamento=lte.{hoje}T23:59:59"
-    )
-
-    dados = supabase_rest_select("operacoes_encerradas", q) or []
+        f"&data_fechamento=lte.{hoje}T23:59:59",
+    ) or []
     return dados
 
-# ===========================
-# 📊 STATS AÇÕES
-# ===========================
 def build_stats_for_indice(dados_gerais, indice_atual: str):
+
     filtrados = [x for x in dados_gerais if (x.get("indice") or "").upper() == indice_atual.upper()]
 
     pontos_pct = []
@@ -488,13 +374,17 @@ def build_stats_for_indice(dados_gerais, indice_atual: str):
         "sparkline": pontos_pct,
     }
 
-# ===========================
-# 📊 STATS OPÇÕES — REST
-# ===========================
-def supabase_select_opcoes(query_string: str):
-    return supabase_rest_select("opcoes_operacoes", query_string)
-
 def build_stats_opcoes_30d():
+    """
+    Carrega operações encerradas de opções diretamente da tabela 'opcoes_operacoes'
+    do Supabase, filtrando os últimos 30 dias. Calcula:
+    - lucro_total_pct
+    - media_pct
+    - winrate
+    - qtd_trades
+    - sparkline (retorno por data)
+    """
+
     hoje = datetime.date.today()
     inicio_30d = hoje - datetime.timedelta(days=30)
 
@@ -520,18 +410,23 @@ def build_stats_opcoes_30d():
 
     df = pd.DataFrame(dados)
 
+    # Converte datas
     df["timestamp_saida"] = pd.to_datetime(df["timestamp_saida"], errors="coerce")
     df["created_at"] = pd.to_datetime(df["created_at"], errors="coerce")
 
+    # Se não tiver timestamp, descarta
     df = df.dropna(subset=["timestamp_saida"]).copy()
 
+    # Calcula pnl_pct
     if "retorno_final_pct" in df.columns:
         df["pnl_pct"] = pd.to_numeric(df["retorno_final_pct"], errors="coerce").fillna(0.0)
     else:
         df["preco_entrada"] = pd.to_numeric(df.get("preco_entrada"), errors="coerce")
         df["preco_saida"] = pd.to_numeric(df.get("preco_saida"), errors="coerce")
-        df["pnl_pct"] = ((df["preco_saida"] - df["preco_entrada"]) / df["preco_entrada"]) * 100
+        df["pnl_pct"] = ((df["preco_saida"] - df["preco_entrada"]) /
+                         df["preco_entrada"]) * 100
 
+    # Remove qualquer NaN restante
     df["pnl_pct"] = df["pnl_pct"].fillna(0)
 
     valores = df["pnl_pct"].tolist()
@@ -552,6 +447,7 @@ def build_stats_opcoes_30d():
     wins = [v for v in valores if v > 0]
     winrate = len(wins) / qtd_trades if qtd_trades else 0.0
 
+    # Sparkline
     spark = [
         {"data": row["timestamp_saida"], "pct": row["pnl_pct"]}
         for _, row in df.sort_values("timestamp_saida").iterrows()
@@ -566,7 +462,13 @@ def build_stats_opcoes_30d():
         "sparkline": spark,
     }
 
+
 def assimetria(stats):
+    """
+    Razão ganho/perda (Gain/Loss Ratio):
+    > 1 = carteira assimétrica positiva.
+    < 1 = perdas maiores que ganhos.
+    """
     if not stats["has_data"]:
         return 0.0
 
@@ -579,19 +481,34 @@ def assimetria(stats):
     total_perdas = sum(perdas)
 
     if total_perdas == 0:
-        return float("inf")
+        return float('inf')  # se não teve perda nenhuma, assimetria infinita
 
     return total_ganhos / total_perdas
 
+
+
+
+
 def load_opcoes_abertas():
+    """
+    Retorna todas as operações de opções com status = 'aberta'
+    diretamente da tabela opcoes_operacoes.
+    """
     q = "?select=symbol,retorno_atual_pct,status&status=eq.aberta"
     dados = supabase_select_opcoes(q) or []
     return dados
 
 def best_trade_opcoes(stats):
+    """
+    A partir do stats (que já contém sparkline + pnl_pct),
+    extraímos a operação mais lucrativa.
+    """
     if not stats["has_data"] or not stats["qtd_trades"]:
         return None
 
+    # sparkline contém: {"data": ..., "pct": valor}
+    # Vamos ter que pegar o ticker junto
+    # Portanto refazemos a consulta com select de ticker + pnl_pct
     hoje = datetime.date.today()
     inicio_30d = hoje - datetime.timedelta(days=30)
 
@@ -604,9 +521,11 @@ def best_trade_opcoes(stats):
     )
 
     dados = supabase_select_opcoes(q) or []
+
     if not dados:
         return None
 
+    # calcular corretamento pnl_pct
     df = pd.DataFrame(dados)
 
     if "retorno_final_pct" in df.columns:
@@ -615,7 +534,8 @@ def best_trade_opcoes(stats):
         df["preco_entrada"] = pd.to_numeric(df.get("preco_entrada"), errors="coerce")
         df["preco_saida"] = pd.to_numeric(df.get("preco_saida"), errors="coerce")
         df["pnl_pct"] = (
-            (df["preco_saida"] - df["preco_entrada"]) / df["preco_entrada"]
+            (df["preco_saida"] - df["preco_entrada"]) /
+            df["preco_entrada"]
         ).fillna(0.0) * 100.0
 
     df = df.dropna(subset=["pnl_pct"])
@@ -629,6 +549,9 @@ def best_trade_opcoes(stats):
         "ticker": row.get("symbol"),
         "pnl_pct": float(row.get("pnl_pct", 0.0)),
     }
+
+
+
 
 # ===========================
 # 🔥 PHOENIX SCORE
@@ -645,13 +568,14 @@ def phoenix_score(stats, resumo_estado):
         trades = stats["qtd_trades"]
         ativos = resumo_estado["total"]
 
-        comp_lucro = max(min(lt / 12.0, 20.0), -10.0)
-        comp_media = max(min(media * 0.4, 15.0), -10.0)
-        comp_win = (win - 0.55) * 60.0
-        comp_trades = min(trades * 1.0, 10.0)
-        comp_ativos = min(ativos * 1.0, 10.0)
-
+        comp_lucro = max(min(lt / 12.0, 20.0), -10.0)       # antes: /5 → agora mais difícil
+        comp_media = max(min(media * 0.4, 15.0), -10.0)     # antes: *0.8 → agora metade
+        comp_win = (win - 0.55) * 60.0                      # antes: -0.5 e 80pts → mais exigente
+        comp_trades = min(trades * 1.0, 10.0)               # antes: *2 → agora menos impacto
+        comp_ativos = min(ativos * 1.0, 10.0)               # antes: 1.5 → menor peso
+        
         score = 50.0 + comp_lucro + comp_media + comp_win + comp_trades + comp_ativos
+
 
     return max(0.0, min(100.0, round(score, 1)))
 
@@ -688,7 +612,10 @@ def sparkline_figure(stats):
     df = pd.DataFrame(stats["sparkline"])
     df = df.sort_values("data")
 
+    # ===== CÁLCULO DO RETORNO ACUMULADO =====
     df["acumulado"] = df["pct"].cumsum()
+
+    # ===== SUAVIZAÇÃO DA LINHA =====
     df["acumulado_smooth"] = (
         df["acumulado"].rolling(window=3, min_periods=1).mean()
     ).interpolate(method="linear")
@@ -699,7 +626,7 @@ def sparkline_figure(stats):
             x=df["data"],
             y=df["acumulado_smooth"],
             mode="lines",
-            line=dict(width=4),
+            line=dict(width=4),  # mais robusta
         )
     )
 
@@ -712,6 +639,9 @@ def sparkline_figure(stats):
         yaxis=dict(title="Retorno acumulado (%)", showgrid=True),
     )
     return fig
+
+
+
 
 def barras_lucro_prejuizo(stats):
     if not stats["has_data"] or not stats["sparkline"]:
@@ -728,32 +658,36 @@ def barras_lucro_prejuizo(stats):
     media_prejuizo = (sum(prejuizos) / qtd_prej) if qtd_prej else 0
     media_lucro = (sum(lucros) / qtd_lucro) if qtd_lucro else 0
 
+    # ===== PESO (ponderação por número de operações) =====
     bar_prejuizo = -(abs(media_prejuizo) * qtd_prej)
     bar_lucro = media_lucro * qtd_lucro
 
+    # ===== TEXTOS EXIBIDOS (somente resultado final) =====
     label_preju = f"{bar_prejuizo:.2f}%"
     label_lucro = f"{bar_lucro:.2f}%"
 
     fig = go.Figure()
 
+    # ===== BARRA DE PREJUÍZO (LARANJA/VERMELHA) =====
     fig.add_trace(
         go.Bar(
-            x=[""],
+            x=[""],    # remove label dos eixos
             y=[bar_prejuizo],
             text=[label_preju],
-            marker=dict(color="#f97316"),
+            marker=dict(color="#f97316"),   # laranja
             textposition="outside",
             cliponaxis=False,
             name="",
         )
     )
 
+    # ===== BARRA DE LUCRO (VERDE) =====
     fig.add_trace(
         go.Bar(
-            x=[""],
+            x=[""],    # mesmo eixo
             y=[bar_lucro],
             text=[label_lucro],
-            marker=dict(color="#22c55e"],
+            marker=dict(color="#22c55e"),   # verde
             textposition="outside",
             cliponaxis=False,
             name="",
@@ -761,14 +695,14 @@ def barras_lucro_prejuizo(stats):
     )
 
     fig.update_layout(
-        barmode="group",
+        barmode="group",        # coloca lado a lado
         template="plotly_dark",
         margin=dict(l=10, r=10, t=20, b=40),
         height=240,
         showlegend=False,
         xaxis=dict(
             title="",
-            showticklabels=False,
+            showticklabels=False,  # remove nomes "Média Prejuízo / Lucro"
             zeroline=False,
         ),
         yaxis=dict(
@@ -779,8 +713,12 @@ def barras_lucro_prejuizo(stats):
 
     return fig
 
+
+
+
+
 # ===========================
-# 🧱 SUPER CARD DE CARTEIRA
+# 🧱 SUPER CARD DE CARTEIRA (1 COLUNA)
 # ===========================
 def render_carteira(card_data):
     nome = card_data["nome"]
@@ -804,6 +742,7 @@ def render_carteira(card_data):
 
     desc = tendencia_text(stats)
 
+    # MÉTRICAS PRINCIPAIS
     m1 = f"""<div class='metric-box'>
 <div class='metric-label'>Lucro total 30d</div>
 <div class='metric-value' style='color:{'#22c55e' if lucro_total_pct>=0 else '#ef4444'};'>{lucro_total_pct:.1f}%</div>
@@ -822,6 +761,7 @@ def render_carteira(card_data):
 <div class='metric-sub'>últimos 30 dias</div>
 </div>"""
 
+    # MÉTRICAS ESPECIAIS OPÇÕES
     if card_data["id"] == "OPCOES":
         total_operacoes = qtd_trades
         abertas = load_opcoes_abertas()
@@ -846,6 +786,8 @@ def render_carteira(card_data):
 <div class='metric-value'>{melhor_label}</div>
 <div class='metric-sub'>últimos 30 dias</div>
 </div>"""
+
+    # MÉTRICAS AÇÕES
     else:
         m4 = f"""<div class='metric-box'>
 <div class='metric-label'>Pendentes</div>
@@ -865,6 +807,7 @@ def render_carteira(card_data):
 <div class='metric-sub'>ativos sob vigilância</div>
 </div>"""
 
+    # CARD COMPLETO EM UM ÚNICO HTML
     card_html = f"""
 <div class='card-wrapper'>
 
@@ -898,11 +841,13 @@ def render_carteira(card_data):
 
     st.markdown(card_html, unsafe_allow_html=True)
 
+    # BOTÃO FORA
     st.markdown(
         f"""<a href='{LINK_ASSINAR}' target='_blank' class='btn-assinar'>ASSINAR AGORA!</a>""",
         unsafe_allow_html=True,
     )
 
+    # GRÁFICOS
     c1, c2 = st.columns([1.35, 0.65])
     with c1:
         st.markdown("##### 📈 Performance recente (30d)")
@@ -914,13 +859,20 @@ def render_carteira(card_data):
         fig_bar = barras_lucro_prejuizo(stats)
         st.plotly_chart(fig_bar, use_container_width=True)
 
+
+
 # ===========================
 # 🔢 MONTAGEM DOS DADOS DAS CARTEIRAS
 # ===========================
-st.write("DEBUG → Carregando operações de 30 dias (ações) via REST...")
-dados_30d_geral = load_ops_30d()
-st.write("DEBUG → Qtde registros operacoes_encerradas:", len(dados_30d_geral))
 
+# ===========================
+# 📊 CARREGA DADOS DE AÇÕES (30 DIAS)
+# ===========================
+dados_30d_geral = load_ops_30d()
+
+# ===========================
+# 🔢 CONFIGURAÇÃO DAS CARTEIRAS
+# ===========================
 carteiras_cfg = [
     {
         "id": "IBOV",
@@ -953,7 +905,6 @@ for cfg in carteiras_cfg:
     resumo = resumo_carteira_estado(cfg["id"])
 
     if cfg["id"] == "OPCOES":
-        st.write("DEBUG → Carregando stats de opções via REST...")
         stats = build_stats_opcoes_30d()
     else:
         stats = build_stats_for_indice(dados_30d_geral, cfg["id"])
@@ -971,23 +922,31 @@ for cfg in carteiras_cfg:
         }
     )
 
+
 # ===========================
-# 📦 RENDERIZA CADA CARTEIRA
+# 📦 RENDERIZA CADA CARTEIRA (1 COLUNA)
 # ===========================
 for card in cards_data:
     render_carteira(card)
 
 # ===========================
-# 🏆 RANKING + SCORE GLOBAL
+# 🏆 RANKING + TOP TRADES + SCORE GLOBAL (RODAPÉ)
 # ===========================
 st.markdown("---")
+# ===========================
+# ===========================
+# 🏆 Ranking Phoenix — Institucional (sem emojis)
+# ===========================
+
 st.markdown("## Ranking Phoenix — Últimos 30 dias")
 
+# --- MÉTRICAS ---
 rank_score = sorted(cards_data, key=lambda c: c["score"], reverse=True)[0]
 rank_lucro = sorted(cards_data, key=lambda c: c["stats"]["lucro_total_pct"], reverse=True)[0]
 rank_win = sorted(cards_data, key=lambda c: c["stats"]["winrate"], reverse=True)[0]
 rank_assim = sorted(cards_data, key=lambda c: assimetria(c["stats"]), reverse=True)[0]
 
+# ------------ 1. Melhor Score -------------
 st.markdown(f"""
 <div class='rank-card'>
   <div class='rank-title'>
@@ -1000,6 +959,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# ------------ 2. Maior Lucro 30d -------------
 st.markdown(f"""
 <div class='rank-card'>
   <div class='rank-title'>
@@ -1012,6 +972,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# ------------ 3. Melhor Winrate -------------
 st.markdown(f"""
 <div class='rank-card'>
   <div class='rank-title'>
@@ -1024,6 +985,7 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# ------------ 4. Melhor Assimetria -------------
 assim_val = assimetria(rank_assim["stats"])
 assim_str = "∞" if assim_val == float("inf") else f"{assim_val:.2f}x"
 
@@ -1039,6 +1001,13 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+
+
+
+
+# ===========================
+# 🦅 PHOENIX SCORE GLOBAL — RODAPÉ
+# ===========================
 st.markdown("## 🦅 Phoenix Score Global")
 
 def compute_global_score(cards):
@@ -1051,8 +1020,10 @@ def compute_global_score(cards):
         pesos.append(trades)
         valores.append(c["score"])
     if not pesos:
+        # fallback: média simples
         if not cards:
             return 50.0
+        return sum(c["score"] for c in cards) / len(cards)
     total_peso = sum(pesos)
     score = sum(v * p for v, p in zip(valores, pesos)) / total_peso
     return round(score, 1)
