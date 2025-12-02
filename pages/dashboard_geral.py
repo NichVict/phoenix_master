@@ -576,7 +576,6 @@ def barras_lucro_prejuizo(stats):
     else:
         valores = [p["pct"] for p in stats["sparkline"]]
 
-    # Separa lucros e prejuízos
     prejuizos = [-v for v in valores if v < 0]
     lucros = [v for v in valores if v > 0]
 
@@ -586,42 +585,61 @@ def barras_lucro_prejuizo(stats):
     media_prejuizo = (sum(prejuizos) / qtd_prej) if qtd_prej else 0
     media_lucro = (sum(lucros) / qtd_lucro) if qtd_lucro else 0
 
-    # ====== APLICAÇÃO DO PESO ======
+    # ===== PESO (ponderação por número de operações) =====
     bar_prejuizo = -(abs(media_prejuizo) * qtd_prej)
     bar_lucro = media_lucro * qtd_lucro
 
-    # Texto sempre exibido
-    label_preju = f"-{abs(media_prejuizo):.2f}% × {qtd_prej} = {bar_prejuizo:.2f}%"
-    label_lucro = f"{media_lucro:.2f}% × {qtd_lucro} = {bar_lucro:.2f}%"
+    # ===== TEXTOS EXIBIDOS (somente resultado final) =====
+    label_preju = f"{bar_prejuizo:.2f}%"
+    label_lucro = f"{bar_lucro:.2f}%"
 
     fig = go.Figure()
+
+    # ===== BARRA DE PREJUÍZO (LARANJA/VERMELHA) =====
     fig.add_trace(
         go.Bar(
-            x=["Média Prejuízo", "Média Lucro"],
-            y=[bar_prejuizo, bar_lucro],
-            text=[label_preju, label_lucro],
+            x=[""],    # remove label dos eixos
+            y=[bar_prejuizo],
+            text=[label_preju],
+            marker=dict(color="#f97316"),   # laranja
             textposition="outside",
-            cliponaxis=False,       # Permite texto sair do limite
-            textfont=dict(size=13),
+            cliponaxis=False,
+            name="",
+        )
+    )
+
+    # ===== BARRA DE LUCRO (VERDE) =====
+    fig.add_trace(
+        go.Bar(
+            x=[""],    # mesmo eixo
+            y=[bar_lucro],
+            text=[label_lucro],
+            marker=dict(color="#22c55e"),   # verde
+            textposition="outside",
+            cliponaxis=False,
+            name="",
         )
     )
 
     fig.update_layout(
+        barmode="group",        # coloca lado a lado
         template="plotly_dark",
-        margin=dict(l=10, r=10, t=20, b=70),  # AUMENTADO = remove sobreposição
+        margin=dict(l=10, r=10, t=20, b=40),
         height=240,
         showlegend=False,
         xaxis=dict(
             title="",
-            tickfont=dict(size=13),
-            automargin=True,       # deixa Plotly resolver padding automaticamente
+            showticklabels=False,  # remove nomes "Média Prejuízo / Lucro"
+            zeroline=False,
         ),
         yaxis=dict(
             title="Retorno ponderado (%)",
+            zeroline=True,
         ),
     )
 
     return fig
+
 
 
 
