@@ -1,22 +1,16 @@
 import streamlit as st
 import requests
 
-# =================================================
-# CONFIG BÁSICA
-# =================================================
-st.set_page_config(page_title="Login Phoenix", layout="wide")
-
-st.title("🔑 Login Phoenix – Acesso via Token (REST)")
-st.write("Versão simplificada para validar autenticação e permissões.")
-
+st.set_page_config(page_title="Teste Login REST", layout="centered")
 
 # =================================================
-# 🔗 CREDENCIAIS SUPABASE
+# CONFIG (iguais ao CRM)
 # =================================================
 SUPABASE_URL = st.secrets["SUPABASE_URL_CLIENTES"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY_CLIENTES"]
 
 TABLE = "clientes"
+
 REST_URL = f"{SUPABASE_URL}/rest/v1/{TABLE}"
 
 HEADERS = {
@@ -25,11 +19,17 @@ HEADERS = {
 }
 
 
+st.title("🔎 Teste Login via REST (sem supabase-py)")
+st.write("Usando a API REST nativa do Supabase")
+
+
 # =================================================
-# FUNÇÃO: Buscar cliente pelo token (REST)
+# FUNÇÃO → Buscar cliente pelo token
 # =================================================
-def buscar_cliente(token: str):
-    url = REST_URL + f"?token=eq.{token}&select=*"
+def buscar_cliente(token):
+    query = f"?token=eq.{token}&select=*"
+
+    url = REST_URL + query
     st.write("DEBUG → URL:", url)
 
     resp = requests.get(url, headers=HEADERS)
@@ -40,90 +40,41 @@ def buscar_cliente(token: str):
     if resp.status_code != 200:
         return None
 
-    try:
-        data = resp.json()
-    except Exception as e:
-        st.write("DEBUG → Erro ao fazer resp.json():", e)
-        return None
+    data = resp.json()
 
     if not data:
         return None
 
-    return data[0]
+    return data[0]  # único registro
 
 
 # =================================================
-# CAPTURAR TOKEN DA URL
+# Capturar token da URL
 # =================================================
 params = st.query_params
 token = params.get("token", None)
 
-st.write("DEBUG → Token recebido:", token)
+st.write("DEBUG → Token:", token)
 
 if not token:
-    st.error("❌ Nenhum token encontrado na URL.")
-    st.info("Acesse usando o link mágico enviado ao seu e-mail.")
+    st.warning("Nenhum token encontrado.")
     st.stop()
 
 
 # =================================================
-# BUSCAR CLIENTE
+# Buscar cliente
 # =================================================
 cliente = buscar_cliente(token)
 
+st.markdown("---")
+
 if not cliente:
-    st.error("❌ Token inválido ou cliente não encontrado.")
-    st.stop()
-
-
-# =================================================
-# SALVAR NA SESSÃO (ESSENCIAL!)
-# =================================================
-st.session_state["token"] = token
-st.session_state["cliente"] = cliente
-
-st.write("DEBUG → session_state.token =", st.session_state.get("token"))
-st.write("DEBUG → session_state.cliente.nome =", st.session_state["cliente"].get("nome"))
-
-
-# =================================================
-# MOSTRAR INFO DO CLIENTE
-# =================================================
-st.success(f"🔓 Login reconhecido! Bem-vindo, **{cliente['nome']}**.")
-
-st.write("### 🗂 Suas carteiras:")
-carteiras = cliente.get("carteiras", []) or []
-if not carteiras:
-    st.warning("Nenhuma carteira ativa para este cliente.")
+    st.error("❌ Nenhum cliente encontrado para esse token.")
 else:
+    st.success("Cliente encontrado!")
+    st.json(cliente)
+
+    carteiras = cliente.get("carteiras", [])
+    st.write("### Carteiras:")
     for c in carteiras:
-        st.write(f"✔️ {c}")
-
-st.markdown("---")
-st.write("### 🔍 Dados completos do cliente (debug):")
-st.json(cliente)
-
-st.markdown("---")
-
-# =================================================
-# 🔗 LINKS PARA PÁGINAS PROTEGIDAS
-# =================================================
-MAPA = {
-    "Carteira de Ações IBOV": "carteira_ibov",
-    "Carteira de BDRs": "carteira_bdr",
-    "Carteira de Small Caps": "carteira_small",
-    "Carteira de Opções": "carteira_opcoes",
-}
-
-st.write("### 📁 Acessar Carteiras Liberadas:")
-
-for cart in carteiras:
-    page = MAPA.get(cart)
-    if page:
-        # NUNCA adicionar .py — Streamlit não aceita
-        st.page_link(page, label=f"➡️ {cart}", icon="📊")
-
-# =================================================
-# 🌐 DASHBOARD GERAL (Sempre liberado)
-# =================================================
-st.page_link("dashboard_geral", label="🌐 Dashboard Geral (Livre)", icon="🌍")
+        st.write(f"- {c}")
