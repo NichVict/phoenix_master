@@ -1,31 +1,23 @@
-import datetime
-import pandas as pd
-import plotly.graph_objects as go
 import streamlit as st
-
-from carteiras_bridge import (
-    curto_state,
-    loss_state,
-    get_indice_ativo,
-    supabase_select,
-)
-
-
-
 import requests
-import fenix_opcoes.supabase_ops as supabase_ops_mod
+import datetime
 
-# ===== IMPORT PARA TABELA SQL DE OPÇÕES =====
-def supabase_select_opcoes(query_string: str):
-    """
-    Wrapper igual ao supabase_select, mas apontando para a tabela opcoes_operacoes.
-    """
-    return supabase_select("opcoes_operacoes", query_string)
 
-REST_ENDPOINT_OP = getattr(supabase_ops_mod, "REST_ENDPOINT", None)
-HEADERS_OP = getattr(supabase_ops_mod, "HEADERS", None)
+st.set_page_config(page_title="Dashboard Geral", layout="wide")
 
-LINK_ASSINAR = "https://app.infinitepay.io/products"
+st.title("📊 Dashboard Geral – Projeto Phoenix")
+st.write("Versão de teste — apenas leitura do cliente via REST.")
+
+
+
+
+
+
+
+
+
+
+
 
 # ===========================
 # 🎨 CSS – ESTILO PREMIUM
@@ -33,6 +25,9 @@ LINK_ASSINAR = "https://app.infinitepay.io/products"
 st.markdown(
     """
 <style>
+
+
+
 .dashboard-title {
 font-size: 32px;
 font-weight: 800;
@@ -153,9 +148,10 @@ font-size:12px;
 font-weight:900;
 text-transform:uppercase;
 letter-spacing:.09em;
-text-decoration:none;
+text-decoration:none !important;   /* 👈 FORÇA O NÃO-SUBLINHADO */
 transition:all .18s ease-out;
 }
+
 
 .btn-assinar:hover {
 transform:translateY(-1px) scale(1.03);
@@ -223,6 +219,47 @@ overflow:hidden;
 height:100%;
 border-radius:999px;
 }
+
+/* ===== PRIME CARDS DO RANKING ===== */
+/* ===== Ranking Institucional ===== */
+.rank-card {
+    background: rgba(10,15,25,0.75);
+    border: 1px solid rgba(120,130,150,0.22);
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-bottom: 18px;
+    transition: all 0.18s ease-out;
+}
+
+.rank-card:hover {
+    background: rgba(14,20,30,0.90);
+    border-color: rgba(150,160,180,0.30);
+    transform: translateY(-1px);
+}
+
+.rank-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin-bottom: 4px;
+}
+
+.rank-sub {
+    font-size: 14px;
+    font-weight: 400;
+    color: #9ca3af;
+}
+
+.rank-icon {
+    font-size: 17px;
+    opacity: 0.75;
+    margin-right: 6px;
+}
+
+
+
+
+
 </style>
 """,
     unsafe_allow_html=True,
@@ -411,6 +448,27 @@ def build_stats_opcoes_30d():
     }
 
 
+def assimetria(stats):
+    """
+    Razão ganho/perda (Gain/Loss Ratio):
+    > 1 = carteira assimétrica positiva.
+    < 1 = perdas maiores que ganhos.
+    """
+    if not stats["has_data"]:
+        return 0.0
+
+    valores = [p["pct"] for p in stats["sparkline"]]
+
+    ganhos = [v for v in valores if v > 0]
+    perdas = [-v for v in valores if v < 0]
+
+    total_ganhos = sum(ganhos)
+    total_perdas = sum(perdas)
+
+    if total_perdas == 0:
+        return float('inf')  # se não teve perda nenhuma, assimetria infinita
+
+    return total_ganhos / total_perdas
 
 
 
@@ -495,13 +553,14 @@ def phoenix_score(stats, resumo_estado):
         trades = stats["qtd_trades"]
         ativos = resumo_estado["total"]
 
-        comp_lucro = max(min(lt / 5.0, 30.0), -20.0)
-        comp_media = max(min(media * 0.8, 25.0), -15.0)
-        comp_win = (win - 0.5) * 80.0
-        comp_trades = min(trades * 2.0, 20.0)
-        comp_ativos = min(ativos * 1.5, 15.0)
-
+        comp_lucro = max(min(lt / 12.0, 20.0), -10.0)       # antes: /5 → agora mais difícil
+        comp_media = max(min(media * 0.4, 15.0), -10.0)     # antes: *0.8 → agora metade
+        comp_win = (win - 0.55) * 60.0                      # antes: -0.5 e 80pts → mais exigente
+        comp_trades = min(trades * 1.0, 10.0)               # antes: *2 → agora menos impacto
+        comp_ativos = min(ativos * 1.0, 10.0)               # antes: 1.5 → menor peso
+        
         score = 50.0 + comp_lucro + comp_media + comp_win + comp_trades + comp_ativos
+
 
     return max(0.0, min(100.0, round(score, 1)))
 
@@ -538,48 +597,110 @@ def sparkline_figure(stats):
     df = pd.DataFrame(stats["sparkline"])
     df = df.sort_values("data")
 
+    # ===== CÁLCULO DO RETORNO ACUMULADO =====
+    df["acumulado"] = df["pct"].cumsum()
+
+    # ===== SUAVIZAÇÃO DA LINHA =====
+    df["acumulado_smooth"] = (
+        df["acumulado"].rolling(window=3, min_periods=1).mean()
+    ).interpolate(method="linear")
+
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
             x=df["data"],
-            y=df["pct"],
-            mode="lines+markers",
-            line=dict(width=2),
-            marker=dict(size=5),
+            y=df["acumulado_smooth"],
+            mode="lines",
+            line=dict(width=4),  # mais robusta
         )
     )
+
     fig.update_layout(
         template="plotly_dark",
         margin=dict(l=10, r=10, t=20, b=20),
         height=190,
         showlegend=False,
         xaxis=dict(title="", showgrid=False),
-        yaxis=dict(title="Retorno (%)", showgrid=True),
+        yaxis=dict(title="Retorno acumulado (%)", showgrid=True),
     )
     return fig
 
-def barras_pend_andamento(resumo_estado):
-    pend = resumo_estado["pendentes"]
-    andam = resumo_estado["andamento"]
+
+
+
+def barras_lucro_prejuizo(stats):
+    if not stats["has_data"] or not stats["sparkline"]:
+        valores = []
+    else:
+        valores = [p["pct"] for p in stats["sparkline"]]
+
+    prejuizos = [-v for v in valores if v < 0]
+    lucros = [v for v in valores if v > 0]
+
+    qtd_prej = len(prejuizos)
+    qtd_lucro = len(lucros)
+
+    media_prejuizo = (sum(prejuizos) / qtd_prej) if qtd_prej else 0
+    media_lucro = (sum(lucros) / qtd_lucro) if qtd_lucro else 0
+
+    # ===== PESO (ponderação por número de operações) =====
+    bar_prejuizo = -(abs(media_prejuizo) * qtd_prej)
+    bar_lucro = media_lucro * qtd_lucro
+
+    # ===== TEXTOS EXIBIDOS (somente resultado final) =====
+    label_preju = f"{bar_prejuizo:.2f}%"
+    label_lucro = f"{bar_lucro:.2f}%"
 
     fig = go.Figure()
+
+    # ===== BARRA DE PREJUÍZO (LARANJA/VERMELHA) =====
     fig.add_trace(
         go.Bar(
-            x=["Pendentes", "Andamento"],
-            y=[pend, andam],
-            text=[pend, andam],
+            x=[""],    # remove label dos eixos
+            y=[bar_prejuizo],
+            text=[label_preju],
+            marker=dict(color="#f97316"),   # laranja
             textposition="outside",
+            cliponaxis=False,
+            name="",
         )
     )
-    fig.update_layout(
-        template="plotly_dark",
-        margin=dict(l=10, r=10, t=20, b=20),
-        height=190,
-        showlegend=False,
-        xaxis=dict(title=""),
-        yaxis=dict(title="Qtde trades"),
+
+    # ===== BARRA DE LUCRO (VERDE) =====
+    fig.add_trace(
+        go.Bar(
+            x=[""],    # mesmo eixo
+            y=[bar_lucro],
+            text=[label_lucro],
+            marker=dict(color="#22c55e"),   # verde
+            textposition="outside",
+            cliponaxis=False,
+            name="",
+        )
     )
+
+    fig.update_layout(
+        barmode="group",        # coloca lado a lado
+        template="plotly_dark",
+        margin=dict(l=10, r=10, t=20, b=40),
+        height=240,
+        showlegend=False,
+        xaxis=dict(
+            title="",
+            showticklabels=False,  # remove nomes "Média Prejuízo / Lucro"
+            zeroline=False,
+        ),
+        yaxis=dict(
+            title="Retorno ponderado (%)",
+            zeroline=True,
+        ),
+    )
+
     return fig
+
+
+
+
 
 # ===========================
 # 🧱 SUPER CARD DE CARTEIRA (1 COLUNA)
@@ -606,177 +727,121 @@ def render_carteira(card_data):
 
     desc = tendencia_text(stats)
 
-    # ===========================================================
-    # CARD COMEÇA AQUI
-    # ===========================================================
-    st.markdown(
-        f"""
-<div class="card-wrapper">
+    # MÉTRICAS PRINCIPAIS
+    m1 = f"""<div class='metric-box'>
+<div class='metric-label'>Lucro total 30d</div>
+<div class='metric-value' style='color:{'#22c55e' if lucro_total_pct>=0 else '#ef4444'};'>{lucro_total_pct:.1f}%</div>
+<div class='metric-sub'>soma dos trades fechados</div>
+</div>"""
 
-  <div class="card-header">
-    <div class="card-title-left">
-      <div class="card-title-main">{emoji} {nome}</div>
-      <div class="card-tag">Phoenix Strategy · {tag_extra}</div>
-    </div>
-    <div class="score-badge">
-      <div class="score-label">Phoenix Score</div>
-      <div class="score-value" style="color:{cor_score};">{score}</div>
-      <div class="score-bar-outer">
-        <div class="score-bar-inner" style="width:{score}%;background:{cor_score};"></div>
-      </div>
-    </div>
-  </div>
+    m2 = f"""<div class='metric-box'>
+<div class='metric-label'>Winrate 30d</div>
+<div class='metric-value'>{winrate_pct:.1f}%</div>
+<div class='metric-sub'>{qtd_trades} operações fechadas</div>
+</div>"""
 
-""",
-        unsafe_allow_html=True,
-    )
+    m3 = f"""<div class='metric-box'>
+<div class='metric-label'>Média por trade</div>
+<div class='metric-value' style='color:{'#22c55e' if media_pct>=0 else '#ef4444'};'>{media_pct:.2f}%</div>
+<div class='metric-sub'>últimos 30 dias</div>
+</div>"""
 
-    # ===========================================================
-    # MÉTRICAS PRINCIPAIS (IGUAIS PARA TODAS AS CARTEIRAS)
-    # ===========================================================
-    st.markdown(
-        f"""
-<div class="metrics-grid">
-
-  <div class="metric-box">
-    <div class="metric-label">Lucro total 30d</div>
-    <div class="metric-value" style="color:{('#22c55e' if lucro_total_pct>=0 else '#ef4444')};">
-      {lucro_total_pct:.1f}%
-    </div>
-    <div class="metric-sub">soma dos trades fechados</div>
-  </div>
-
-  <div class="metric-box">
-    <div class="metric-label">Winrate 30d</div>
-    <div class="metric-value">{winrate_pct:.1f}%</div>
-    <div class="metric-sub">{qtd_trades} operações fechadas</div>
-  </div>
-
-  <div class="metric-box">
-    <div class="metric-label">Média por trade</div>
-    <div class="metric-value" style="color:{('#22c55e' if media_pct>=0 else '#ef4444')};">
-      {media_pct:.2f}%
-    </div>
-    <div class="metric-sub">últimos 30 dias</div>
-  </div>
-
-</div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # ===========================================================
-    # MÉTRICAS ESPECIAIS — APENAS PARA OPÇÕES
-    # ===========================================================
+    # MÉTRICAS ESPECIAIS OPÇÕES
     if card_data["id"] == "OPCOES":
-
-        total_operacoes = stats["qtd_trades"]
+        total_operacoes = qtd_trades
         abertas = load_opcoes_abertas()
         qtd_abertas = len(abertas)
-
         melhor_op = best_trade_opcoes(stats)
-        melhor_label = (
-            f"{melhor_op['ticker']} ({melhor_op['pnl_pct']:.1f}%)"
-            if melhor_op else "—"
-        )
+        melhor_label = f"{melhor_op['ticker']} ({melhor_op['pnl_pct']:.1f}%)" if melhor_op else "—"
 
-        st.markdown(
-            f"""
-<div class="metrics-grid">
+        m4 = f"""<div class='metric-box'>
+<div class='metric-label'>TOTAL DE OPERAÇÕES</div>
+<div class='metric-value'>{total_operacoes}</div>
+<div class='metric-sub'>últimos 30 dias</div>
+</div>"""
 
-  <div class="metric-box">
-    <div class="metric-label">TOTAL DE OPERAÇÕES</div>
-    <div class="metric-value">{total_operacoes}</div>
-    <div class="metric-sub">últimos 30 dias</div>
-  </div>
+        m5 = f"""<div class='metric-box'>
+<div class='metric-label'>EM ANDAMENTO</div>
+<div class='metric-value'>{qtd_abertas}</div>
+<div class='metric-sub'>posições abertas</div>
+</div>"""
 
-  <div class="metric-box">
-    <div class="metric-label">EM ANDAMENTO</div>
-    <div class="metric-value">{qtd_abertas}</div>
-    <div class="metric-sub">posições abertas</div>
-  </div>
+        m6 = f"""<div class='metric-box'>
+<div class='metric-label'>OP. MAIS LUCRATIVA</div>
+<div class='metric-value'>{melhor_label}</div>
+<div class='metric-sub'>últimos 30 dias</div>
+</div>"""
 
-  <div class="metric-box">
-    <div class="metric-label">OP. MAIS LUCRATIVA</div>
-    <div class="metric-value">{melhor_label}</div>
-    <div class="metric-sub">últimos 30 dias</div>
-  </div>
-
-</div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    # ===========================================================
-    # MÉTRICAS DAS AÇÕES (IBOV, BDR, SMLL)
-    # ===========================================================
+    # MÉTRICAS AÇÕES
     else:
-        st.markdown(
-            f"""
-<div class="metrics-grid">
+        m4 = f"""<div class='metric-box'>
+<div class='metric-label'>Pendentes</div>
+<div class='metric-value'>{resumo_estado['pendentes']}</div>
+<div class='metric-sub'>aguardando gatilho</div>
+</div>"""
 
-  <div class="metric-box">
-    <div class="metric-label">Pendentes</div>
-    <div class="metric-value">{resumo_estado['pendentes']}</div>
-    <div class="metric-sub">aguardando gatilho</div>
+        m5 = f"""<div class='metric-box'>
+<div class='metric-label'>Em andamento</div>
+<div class='metric-value'>{resumo_estado['andamento']}</div>
+<div class='metric-sub'>posições abertas</div>
+</div>"""
+
+        m6 = f"""<div class='metric-box'>
+<div class='metric-label'>Total monitorado</div>
+<div class='metric-value'>{resumo_estado['total']}</div>
+<div class='metric-sub'>ativos sob vigilância</div>
+</div>"""
+
+    # CARD COMPLETO EM UM ÚNICO HTML
+    card_html = f"""
+<div class='card-wrapper'>
+
+<div class='card-header'>
+  <div class='card-title-left'>
+    <div class='card-title-main'>{emoji} {nome}</div>
+    <div class='card-tag'>Phoenix Strategy · {tag_extra}</div>
   </div>
 
-  <div class="metric-box">
-    <div class="metric-label">Em andamento</div>
-    <div class="metric-value">{resumo_estado['andamento']}</div>
-    <div class="metric-sub">posições abertas</div>
+  <div class='score-badge'>
+    <div class='score-label'>Phoenix Score</div>
+    <div class='score-value' style='color:{cor_score};'>{score}</div>
+    <div class='score-bar-outer'>
+      <div class='score-bar-inner' style='width:{score}%;background:{cor_score};'></div>
+    </div>
   </div>
+</div>
 
-  <div class="metric-box">
-    <div class="metric-label">Total monitorado</div>
-    <div class="metric-value">{resumo_estado['total']}</div>
-    <div class="metric-sub">ativos sob vigilância</div>
-  </div>
+<div class='metrics-grid'>
+  {m1}{m2}{m3}
+</div>
+
+<div class='metrics-grid'>
+  {m4}{m5}{m6}
+</div>
+
+<div class='card-desc'>{desc}</div>
 
 </div>
-            """,
-            unsafe_allow_html=True,
-        )
+"""
 
-    # ===========================================================
-    # DESCRIÇÃO (DENTRO DO CARD)
-    # ===========================================================
+    st.markdown(card_html, unsafe_allow_html=True)
+
+    # BOTÃO FORA
     st.markdown(
-        f"""
-<div class="card-desc">{desc}</div>
-
-</div> <!-- FECHA card-wrapper -->
-        """,
+        f"""<a href='{LINK_ASSINAR}' target='_blank' class='btn-assinar'>ASSINAR AGORA!</a>""",
         unsafe_allow_html=True,
     )
 
-    # ===========================================================
-    # BOTÃO "ASSINAR AGORA!" (FORA DO CARD)
-    # ===========================================================
-    st.markdown(
-        f"""
-<a href="{LINK_ASSINAR}" target="_blank" class="btn-assinar">
-ASSINAR AGORA!
-</a>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # ===========================================================
     # GRÁFICOS
-    # ===========================================================
     c1, c2 = st.columns([1.35, 0.65])
     with c1:
-        fig_spark = sparkline_figure(stats)
         st.markdown("##### 📈 Performance recente (30d)")
+        fig_spark = sparkline_figure(stats)
         if fig_spark:
             st.plotly_chart(fig_spark, use_container_width=True)
-        else:
-            st.info("Ainda não há operações encerradas suficientes para esta carteira.")
-
     with c2:
-        st.markdown("##### 📊 Trades ativos")
-        fig_bar = barras_pend_andamento(resumo_estado)
+        st.markdown("###### 📊 Assimetria Positiva")
+        fig_bar = barras_lucro_prejuizo(stats)
         st.plotly_chart(fig_bar, use_container_width=True)
 
 
@@ -853,117 +918,77 @@ for card in cards_data:
 # 🏆 RANKING + TOP TRADES + SCORE GLOBAL (RODAPÉ)
 # ===========================
 st.markdown("---")
-st.markdown("## 🏆 Ranking Phoenix — Últimos 30 dias")
-
-# ranking por score
-rank_score = sorted(cards_data, key=lambda c: c["score"], reverse=True)
-
-best_score = rank_score[0]
-st.markdown(
-    f"<div class='rank-box'><div class='rank-title'>🥇 Melhor carteira geral: {best_score['emoji']} {best_score['nome']}</div>"
-    f"<div class='rank-line'><span class='rank-tag'>Phoenix Score</span> {best_score['score']}</div>"
-    f"</div>",
-    unsafe_allow_html=True,
-)
-
-# ranking por lucro total
-rank_lucro = sorted(
-    cards_data,
-    key=lambda c: c["stats"]["lucro_total_pct"],
-    reverse=True,
-)
-
-best_lucro = rank_lucro[0]
-st.markdown(
-    f"<div class='rank-box'>"
-    f"<div class='rank-title'>📈 Carteira com maior lucro 30d: {best_lucro['emoji']} {best_lucro['nome']}</div>"
-    f"<div class='rank-line'><span class='rank-tag'>Lucro total 30d</span> {best_lucro['stats']['lucro_total_pct']:.1f}%</div>"
-    f"</div>",
-    unsafe_allow_html=True,
-)
-
-# ranking por winrate
-rank_win = sorted(
-    cards_data,
-    key=lambda c: c['stats']['winrate'],
-    reverse=True,
-)
-
-best_win = rank_win[0]
-st.markdown(
-    f"<div class='rank-box'>"
-    f"<div class='rank-title'>🎯 Melhor winrate 30d: {best_win['emoji']} {best_win['nome']}</div>"
-    f"<div class='rank-line'><span class='rank-tag'>Winrate</span> {(best_win['stats']['winrate']*100.0):.1f}%</div>"
-    f"</div>",
-    unsafe_allow_html=True,
-)
-
 # ===========================
-# 💹 TOP TRADES 30d
 # ===========================
-st.markdown("### 🔝 Top Trades (30 dias)")
+# 🏆 Ranking Phoenix — Institucional (sem emojis)
+# ===========================
 
-def enrich_ops_with_pct(dados):
-    out = []
-    for x in dados:
-        pnl = x.get("pnl")
-        preco_abertura = x.get("preco_abertura")
-        if pnl is None or not preco_abertura:
-            continue
-        try:
-            pct = (float(pnl) / float(preco_abertura)) * 100.0
-        except Exception:
-            pct = 0.0
-        out.append(
-            {
-                "ticker": x.get("ticker"),
-                "indice": x.get("indice"),
-                "pnl_pct": pct,
-                "pnl": x.get("pnl"),
-                "data_fechamento": x.get("data_fechamento"),
-            }
-        )
-    return out
+st.markdown("## Ranking Phoenix — Últimos 30 dias")
 
-enriched = enrich_ops_with_pct(dados_30d_geral)
+# --- MÉTRICAS ---
+rank_score = sorted(cards_data, key=lambda c: c["score"], reverse=True)[0]
+rank_lucro = sorted(cards_data, key=lambda c: c["stats"]["lucro_total_pct"], reverse=True)[0]
+rank_win = sorted(cards_data, key=lambda c: c["stats"]["winrate"], reverse=True)[0]
+rank_assim = sorted(cards_data, key=lambda c: assimetria(c["stats"]), reverse=True)[0]
 
-if not enriched:
-    st.info("Ainda não há operações encerradas suficientes para montar o ranking de trades.")
-else:
-    melhores = sorted(enriched, key=lambda x: x["pnl_pct"], reverse=True)[:3]
-    piores = sorted(enriched, key=lambda x: x["pnl_pct"])[:3]
+# ------------ 1. Melhor Score -------------
+st.markdown(f"""
+<div class='rank-card'>
+  <div class='rank-title'>
+    {rank_score['emoji']} {rank_score['nome']}
+  </div>
+  <div class='rank-sub'>
+    Melhor carteira geral<br>
+    Phoenix Score: {rank_score['score']}
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
-    col_melhor, col_pior = st.columns(2)
+# ------------ 2. Maior Lucro 30d -------------
+st.markdown(f"""
+<div class='rank-card'>
+  <div class='rank-title'>
+    {rank_lucro['emoji']} {rank_lucro['nome']}
+  </div>
+  <div class='rank-sub'>
+    Maior retorno em 30 dias<br>
+    Retorno acumulado: {rank_lucro['stats']['lucro_total_pct']:.1f}%
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
-    with col_melhor:
-        st.markdown("#### 🥇 Top 3 trades mais lucrativos")
-        df_best = pd.DataFrame(
-            [
-                {
-                    "Ticker": t["ticker"],
-                    "Carteira": t["indice"],
-                    "Retorno (%)": round(t["pnl_pct"], 2),
-                    "PnL (R$)": round(float(t["pnl"] or 0.0), 2),
-                }
-                for t in melhores
-            ]
-        )
-        st.dataframe(df_best, use_container_width=True, hide_index=True)
+# ------------ 3. Melhor Winrate -------------
+st.markdown(f"""
+<div class='rank-card'>
+  <div class='rank-title'>
+    {rank_win['emoji']} {rank_win['nome']}
+  </div>
+  <div class='rank-sub'>
+    Maior consistência (winrate)<br>
+    Winrate: {(rank_win['stats']['winrate']*100):.1f}%
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
-    with col_pior:
-        st.markdown("#### ⚠️ Top 3 trades com maior perda")
-        df_worst = pd.DataFrame(
-            [
-                {
-                    "Ticker": t["ticker"],
-                    "Carteira": t["indice"],
-                    "Retorno (%)": round(t["pnl_pct"], 2),
-                    "PnL (R$)": round(float(t["pnl"] or 0.0), 2),
-                }
-                for t in piores
-            ]
-        )
-        st.dataframe(df_worst, use_container_width=True, hide_index=True)
+# ------------ 4. Melhor Assimetria -------------
+assim_val = assimetria(rank_assim["stats"])
+assim_str = "∞" if assim_val == float("inf") else f"{assim_val:.2f}x"
+
+st.markdown(f"""
+<div class='rank-card'>
+  <div class='rank-title'>
+    {rank_assim['emoji']} {rank_assim['nome']}
+  </div>
+  <div class='rank-sub'>
+    Melhor assimetria<br>
+    Razão ganho/perda: {assim_str}
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+
+
+
 
 # ===========================
 # 🦅 PHOENIX SCORE GLOBAL — RODAPÉ
@@ -998,7 +1023,7 @@ st.markdown(
     f"<div class='global-score-bar-outer'>"
     f"<div class='global-score-bar-inner' style='width:{global_score}%;background:{cor_global};'></div>"
     f"</div>"
-    f"<div class='rank-line'>Score ponderado pelas operações fechadas de todas as carteiras.</div>"
+    f"<div class='rank-line'>O Phoenix Score é um indicador proprietário que pondera retorno, estabilidade e qualidade operacional para oferecer uma medida objetiva da força da estratégia.</div>"
     f"</div>",
     unsafe_allow_html=True,
 )
