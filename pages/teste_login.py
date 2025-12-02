@@ -1,15 +1,11 @@
 import streamlit as st
 import requests
 
-st.set_page_config(page_title="Login • Phoenix", layout="wide")
-
-st.title("🔐 Login Phoenix Premium")
-st.write("Autenticação via token de acesso (link mágico).")
-st.markdown("---")
-
 # =================================================
-# 🔗 CREDENCIAIS DO SUPABASE
+# 🔧 CONFIGURAÇÃO
 # =================================================
+st.set_page_config(page_title="Login - Phoenix", layout="wide")
+
 SUPABASE_URL = st.secrets["SUPABASE_URL_CLIENTES"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY_CLIENTES"]
 
@@ -21,91 +17,106 @@ HEADERS = {
     "Authorization": f"Bearer {SUPABASE_KEY}",
 }
 
-
 # =================================================
-# FUNÇÃO: Buscar cliente pelo token (REST)
+# 🔍 FUNÇÃO DE BUSCA VIA REST
 # =================================================
 def buscar_cliente(token):
-    query = f"?token=eq.{token}&select=*"
-    url = REST_URL + query
-
-    st.write("DEBUG → URL:", url)
-
+    url = f"{REST_URL}?token=eq.{token}&select=*"
     resp = requests.get(url, headers=HEADERS)
 
-    st.write("DEBUG → Status:", resp.status_code)
-    st.write("DEBUG → Conteúdo bruto:", resp.text)
+    st.write("DEBUG → URL:", url)
+    st.write("DEBUG → STATUS:", resp.status_code)
+    st.write("DEBUG → RAW:", resp.text)
 
     if resp.status_code != 200:
         return None
 
     data = resp.json()
-
     if not data:
         return None
 
     return data[0]
 
-
 # =================================================
-# 🔐 CAPTURAR TOKEN DA URL
+# 🔐 TOKEN DA URL
 # =================================================
 params = st.query_params
 token = params.get("token", None)
 
-st.write("DEBUG → Token recebido:", token)
+st.title("🔐 Login – Phoenix Premium")
+st.write("Página dedicada apenas à autenticação via token REST.")
+
+st.write("DEBUG → Token:", token)
 
 if not token:
-    st.error("❌ Nenhum token encontrado na URL.")
-    st.info("Acesse usando o link mágico enviado ao seu e-mail.")
+    st.error("Nenhum token encontrado na URL.")
+    st.info("Use o link mágico enviado para o seu e-mail.")
     st.stop()
 
-
 # =================================================
-# 🔐 BUSCAR CLIENTE
+# 🔐 BUSCA DO CLIENTE
 # =================================================
 cliente = buscar_cliente(token)
 
 if not cliente:
     st.error("❌ Token inválido ou cliente não encontrado.")
+    st.markdown("---")
+    st.markdown("### 📊 Acesso livre ao dashboard geral")
+    st.markdown(
+        f"➡️ [Ir para o Dashboard Geral](./dashboard_geral?token={token})"
+    )
     st.stop()
 
-# Salva na sessão
-st.session_state["cliente"] = cliente
-
-st.markdown("---")
-
 # =================================================
-# 👤 EXIBIR INFO DO CLIENTE
+# 👤 DADOS DO CLIENTE
 # =================================================
 nome = cliente.get("nome", "Investidor")
 carteiras = cliente.get("carteiras", [])
 
-st.success(f"🔓 Login reconhecido! Bem-vindo, **{nome}**.")
+st.success(f"🔓 Bem-vindo, **{nome}**!")
 
-st.subheader("🗂 Suas carteiras disponíveis:")
-
+st.markdown("## 🗂 Suas carteiras ativas:")
 if not carteiras:
-    st.warning("Nenhuma carteira ativa no momento.")
-
+    st.warning("Nenhuma carteira ativa atribuída.")
 else:
-    MAPA_CARTEIRAS = {
-        "Carteira de Ações IBOV": "carteira_ibov.py",
-        "Carteira de Opções": "carteira_opcoes.py",
-        "Carteira de Small Caps": "carteira_small.py",
-        "Carteira de BDRs": "carteira_bdr.py",
-    }
+    for c in carteiras:
+        st.write(f"- {c}")
 
-    for cart in carteiras:
-        page = MAPA_CARTEIRAS.get(cart)
-        if page:
-            st.page_link(f"{page}", label=f"➡️ {cart}", icon="📁")
-        else:
-            st.warning(f"⚠️ Carteira sem página configurada: {cart}")
+# =================================================
+# 🔗 MAPA DAS PÁGINAS
+# =================================================
+MAPA_PAGINAS = {
+    "Carteira de Ações IBOV": "carteira_ibov",
+    "Carteira de Opções": "carteira_opcoes",
+    "Carteira de Small Caps": "carteira_small",
+    "Carteira de BDRs": "carteira_bdr",
+}
 
 st.markdown("---")
+st.markdown("## 📁 Acessar carteiras")
 
-st.subheader("📄 Dados completos do cliente (debug):")
+for cart in carteiras:
+    page = MAPA_PAGINAS.get(cart)
+    if page:
+        st.markdown(
+            f"➡️ [{cart}](./{page}?token={token})",
+            unsafe_allow_html=True,
+        )
+    else:
+        st.warning(f"Carteira não mapeada: {cart}")
+
+# =================================================
+# 📊 ACESSO LIVRE AO DASHBOARD (sempre liberado)
+# =================================================
+st.markdown("---")
+st.markdown("## 📊 Acesso ao Dashboard Geral")
+st.markdown(
+    f"➡️ [Dashboard Geral](./dashboard_geral?token={token})"
+)
+
+# =================================================
+# 🔍 DEBUG
+# =================================================
+st.markdown("---")
+st.markdown("### 🔍 Debug – Dados completos do cliente")
 st.json(cliente)
-
-st.info("Login concluído. Você já pode acessar suas carteiras acima.")
