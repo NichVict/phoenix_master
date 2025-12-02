@@ -906,72 +906,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ===========================
-# 💹 TOP TRADES 30d
-# ===========================
-st.markdown("### 🔝 Top Trades (30 dias)")
 
-def enrich_ops_with_pct(dados):
-    out = []
-    for x in dados:
-        pnl = x.get("pnl")
-        preco_abertura = x.get("preco_abertura")
-        if pnl is None or not preco_abertura:
-            continue
-        try:
-            pct = (float(pnl) / float(preco_abertura)) * 100.0
-        except Exception:
-            pct = 0.0
-        out.append(
-            {
-                "ticker": x.get("ticker"),
-                "indice": x.get("indice"),
-                "pnl_pct": pct,
-                "pnl": x.get("pnl"),
-                "data_fechamento": x.get("data_fechamento"),
-            }
-        )
-    return out
-
-enriched = enrich_ops_with_pct(dados_30d_geral)
-
-if not enriched:
-    st.info("Ainda não há operações encerradas suficientes para montar o ranking de trades.")
-else:
-    melhores = sorted(enriched, key=lambda x: x["pnl_pct"], reverse=True)[:3]
-    piores = sorted(enriched, key=lambda x: x["pnl_pct"])[:3]
-
-    col_melhor, col_pior = st.columns(2)
-
-    with col_melhor:
-        st.markdown("#### 🥇 Top 3 trades mais lucrativos")
-        df_best = pd.DataFrame(
-            [
-                {
-                    "Ticker": t["ticker"],
-                    "Carteira": t["indice"],
-                    "Retorno (%)": round(t["pnl_pct"], 2),
-                    "PnL (R$)": round(float(t["pnl"] or 0.0), 2),
-                }
-                for t in melhores
-            ]
-        )
-        st.dataframe(df_best, use_container_width=True, hide_index=True)
-
-    with col_pior:
-        st.markdown("#### ⚠️ Top 3 trades com maior perda")
-        df_worst = pd.DataFrame(
-            [
-                {
-                    "Ticker": t["ticker"],
-                    "Carteira": t["indice"],
-                    "Retorno (%)": round(t["pnl_pct"], 2),
-                    "PnL (R$)": round(float(t["pnl"] or 0.0), 2),
-                }
-                for t in piores
-            ]
-        )
-        st.dataframe(df_worst, use_container_width=True, hide_index=True)
 
 # ===========================
 # 🦅 PHOENIX SCORE GLOBAL — RODAPÉ
