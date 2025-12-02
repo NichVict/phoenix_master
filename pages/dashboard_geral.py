@@ -1,155 +1,97 @@
 import streamlit as st
-from supabase import create_client, Client
+import requests
 
-# ======================================
-# 🔗 Credenciais — Iguais ao CRM
-# ======================================
+st.set_page_config(page_title="Dashboard Geral", layout="wide")
+
+st.title("📊 Dashboard Geral – Projeto Phoenix")
+st.write("Versão de teste — apenas leitura do cliente via REST.")
+
+
+# =================================================
+# 🔗 CREDENCIAIS (iguais ao CRM)
+# =================================================
 SUPABASE_URL = st.secrets["SUPABASE_URL_CLIENTES"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY_CLIENTES"]
 
-# ======================================
-# 🧪 DEBUG
-# ======================================
-st.write("🔎 DEBUG: Conectando Supabase (versão CRM)...")
-st.write("🔎 URL:", SUPABASE_URL)
-st.write("🔎 KEY prefix:", SUPABASE_KEY[:4])
+TABLE = "clientes"
+REST_URL = f"{SUPABASE_URL}/rest/v1/{TABLE}"
 
-try:
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    st.write("✅ DEBUG: Conexão com Supabase criada com sucesso (modo CRM).")
-except Exception as e:
-    st.error("❌ ERRO ao criar o client Supabase (modo CRM).")
-    st.exception(e)
-    st.stop()
-
-
-# ======================================
-# 🔐 Função para carregar cliente
-# ======================================
-def carregar_cliente_pelo_token():
-    st.write("🔎 DEBUG: Iniciando leitura do token...")
-
-    if "cliente" in st.session_state:
-        st.write("🔎 DEBUG: Cliente já está em session_state.")
-        return st.session_state["cliente"]
-
-    params = st.query_params
-    token = params.get("token", None)
-
-    st.write("🔎 DEBUG: Token encontrado:", token)
-
-    if not token:
-        st.write("❌ DEBUG: Nenhum token presente na URL.")
-        return None
-
-    try:
-        # 🚫 REMOVIDO .single() (que travava tudo)
-        resp = (
-            supabase
-            .table("clientes")
-            .select("*")
-            .eq("token", token)
-            .execute()
-        )
-        st.write("🔎 DEBUG: Resposta do Supabase:", resp)
-
-    except Exception as e:
-        st.error("❌ Erro Supabase ao buscar cliente.")
-        st.exception(e)
-        return None
-
-    dados = resp.data or []
-
-    if len(dados) == 0:
-        st.write("❌ DEBUG: Nenhum cliente corresponde a esse token.")
-        return None
-
-    if len(dados) > 1:
-        st.write("⚠️ DEBUG: Token duplicado! Usando o primeiro registro.")
-
-    cliente = dados[0]
-
-    st.session_state["cliente"] = cliente
-    st.write("✅ DEBUG: Cliente carregado e salvo na sessão.")
-    return cliente
-
-
-# ======================================
-# 🔐 AUTENTICAÇÃO — TEM QUE SER ANTES DE QUALQUER OUTRO IMPORT
-# ======================================
-cliente = carregar_cliente_pelo_token()
-st.write("🔎 DEBUG: Cliente final =", cliente)
-
-if not cliente:
-    st.markdown("---")
-    st.markdown("## Área de Assinaturas")
-    st.markdown("### 👋 Olá, visitante!")
-    st.write("Use o link mágico enviado ao seu e-mail para visualizar suas assinaturas.")
-    st.stop()  # ⛔ PARA TUDO AQUI
-
-
-# ======================================================================
-# 🔥 IMPORTS PESADOS (só devem rodar após o login)
-# ======================================================================
-import datetime
-import pandas as pd
-import plotly.graph_objects as go
-import requests
-
-from carteiras_bridge import (
-    curto_state,
-    loss_state,
-    get_indice_ativo,
-    supabase_select,
-)
-
-import fenix_opcoes.supabase_ops as supabase_ops_mod
-
-
-# ===== IMPORT PARA TABELA SQL DE OPÇÕES =====
-def supabase_select_opcoes(query_string: str):
-    """
-    Wrapper igual ao supabase_select, mas apontando para a tabela opcoes_operacoes.
-    """
-    return supabase_select("opcoes_operacoes", query_string)
-
-REST_ENDPOINT_OP = getattr(supabase_ops_mod, "REST_ENDPOINT", None)
-HEADERS_OP = getattr(supabase_ops_mod, "HEADERS", None)
-
-LINK_ASSINAR = "https://app.infinitepay.io/products"
-
-
-# ============================================================
-# MAPA CORRETO — SUPABASE → ARQUIVOS DAS PAGES
-# ============================================================
-MAPA_SUPABASE_PARA_PAGE = {
-    "Carteira de Ações IBOV": "carteira_ibov",
-    "Carteira de Opções": "carteira_opcoes",
-    "Carteira de Small Caps": "carteira_small",
-    "Carteira de BDRs": "carteira_bdr",
+HEADERS = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
 }
 
 
-# ============================================================
-# ÁREA SUPERIOR DO DASHBOARD (V1)
-# ============================================================
+# =================================================
+# FUNÇÃO: Buscar cliente pelo token (REST)
+# =================================================
+def buscar_cliente(token):
+    query = f"?token=eq.{token}&select=*"
+
+    url = REST_URL + query
+    st.write("DEBUG → URL:", url)
+
+    resp = requests.get(url, headers=HEADERS)
+
+    st.write("DEBUG → Status:", resp.status_code)
+    st.write("DEBUG → Conteúdo bruto:", resp.text)
+
+    if resp.status_code != 200:
+        return None
+
+    data = resp.json()
+
+    if not data:
+        return None
+
+    return data[0]
+
+
+# =================================================
+# 🔐 CAPTURAR TOKEN
+# =================================================
+params = st.query_params
+token = params.get("token", None)
+
+st.write("DEBUG → Token recebido:", token)
+
+if not token:
+    st.error("❌ Nenhum token encontrado na URL.")
+    st.info("Acesse usando o link mágico enviado ao seu e-mail.")
+    st.stop()
+
+
+# =================================================
+# 🔐 CARREGAR CLIENTE
+# =================================================
+cliente = buscar_cliente(token)
+
 st.markdown("---")
-st.markdown("## Área de Assinaturas")
 
+if not cliente:
+    st.error("❌ Nenhum cliente encontrado para esse token.")
+    st.stop()
+
+# =================================================
+# 👤 EXIBIR INFORMAÇÕES DO CLIENTE
+# =================================================
 nome = cliente.get("nome", "Investidor")
-carteiras = cliente.get("carteiras", [])  # a COLUNA CERTA do Supabase
+carteiras = cliente.get("carteiras", [])
 
-st.markdown(f"### 👋 Olá, **{nome}**!")
-st.write("Essas são as suas assinaturas ativas:")
+st.success(f"🔓 Login reconhecido! Bem-vindo, **{nome}**.")
+st.write("### 🗂 Suas carteiras:")
 
-for carteira in carteiras:
-    page = MAPA_SUPABASE_PARA_PAGE.get(carteira)
+if not carteiras:
+    st.warning("Nenhuma carteira ativa.")
+else:
+    for c in carteiras:
+        st.write(f"- {c}")
 
-    if page:
-        # 👉 CORREÇÃO: pages/ + nome do arquivo
-        st.page_link(f"pages/{page}.py", label=carteira)
-    else:
-        st.write(f"⚠️ Carteira sem página vinculada: {carteira}")
+st.markdown("---")
+
+st.write("### 🔍 Dados completos do cliente (debug):")
+st.json(cliente)
+
 
 
 
