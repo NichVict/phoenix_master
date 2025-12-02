@@ -1006,7 +1006,7 @@ st.markdown(
     f"<div class='global-score-bar-outer'>"
     f"<div class='global-score-bar-inner' style='width:{global_score}%;background:{cor_global};'></div>"
     f"</div>"
-    f"<div class='rank-line'>Score ponderado pelas operações fechadas de todas as carteiras.</div>"
+    f"<div class='rank-line'>O Phoenix Score é um indicador proprietário que pondera retorno, estabilidade e qualidade operacional para oferecer uma medida objetiva da força da estratégia.</div>"
     f"</div>",
     unsafe_allow_html=True,
 )
