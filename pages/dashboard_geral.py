@@ -11,7 +11,7 @@ from carteiras_bridge import (
 )
 
 
-
+from supabase import create_client, Client
 import requests
 import fenix_opcoes.supabase_ops as supabase_ops_mod
 
@@ -32,69 +32,53 @@ LINK_ASSINAR = "https://app.infinitepay.io/products"
 # 🔐 AUTENTICAÇÃO VIA LINK MÁGICO – V1
 # ======================================
 
-# ======================================
-# 🔐 AUTENTICAÇÃO VIA LINK MÁGICO – DEBUG V1
-# ======================================
-
-from supabase import create_client, Client
-
-st.write("🔎 DEBUG: Iniciando autenticação...")
-
-# ==========================
-# 1️⃣ Ler secrets
-# ==========================
-try:
-    SUPABASE_URL = st.secrets["SUPABASE_URL_CLIENTES"]
-    SUPABASE_KEY = st.secrets["SUPABASE_KEY_CLIENTES"]
-except Exception as e:
-    st.error("❌ ERRO: Não foi possível ler os secrets.")
-    st.write(e)
-    SUPABASE_URL = None
-    SUPABASE_KEY = None
-
-st.write("🔎 DEBUG: SUPABASE_URL =", SUPABASE_URL)
-st.write("🔎 DEBUG: SUPABASE_KEY (primeiros 8 chars) =", str(SUPABASE_KEY)[:8] if SUPABASE_KEY else None)
 
 
-# ==========================
-# 2️⃣ Criar client do Supabase
-# ==========================
+# ===========================
+# 🔗 Credenciais — Iguais ao CRM
+# ===========================
+SUPABASE_URL = st.secrets["SUPABASE_URL_CLIENTES"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY_CLIENTES"]
+
+# ===========================
+# 🧪 DEBUG
+# ===========================
+st.write("🔎 DEBUG: Conectando Supabase (versão CRM)...")
+st.write("🔎 URL:", SUPABASE_URL)
+st.write("🔎 KEY prefix:", SUPABASE_KEY[:4])
+
 try:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    st.write("🔎 DEBUG: Cliente Supabase criado com sucesso.")
+    st.write("✅ DEBUG: Conexão com Supabase criada com sucesso (modo CRM).")
 except Exception as e:
-    st.error("❌ ERRO ao criar client Supabase.")
-    st.write(e)
-    supabase = None
+    st.error("❌ ERRO ao criar o client Supabase (modo CRM).")
+    st.exception(e)
+    st.stop()
 
 
-# ==========================
-# 3️⃣ Função para carregar cliente
-# ==========================
+# ===========================
+# 🔐 Função para carregar cliente
+# ===========================
 def carregar_cliente_pelo_token():
+    st.write("🔎 DEBUG: Iniciando leitura do token...")
 
-    # Já carregado antes?
     if "cliente" in st.session_state:
-        st.write("🔎 DEBUG: Cliente já estava no session_state.")
+        st.write("🔎 DEBUG: Cliente já está em session_state.")
         return st.session_state["cliente"]
 
-    # Ler token da URL
-    token = st.query_params.get("token", None)
-    st.write("🔎 DEBUG: Token encontrado na URL =", token)
+    params = st.query_params
+    token = params.get("token", None)
+
+    st.write("🔎 DEBUG: Token encontrado:", token)
 
     if not token:
-        st.write("🔎 DEBUG: Nenhum token foi encontrado na URL.")
+        st.write("❌ DEBUG: Nenhum token presente na URL.")
         return None
 
-    if not supabase:
-        st.error("❌ Supabase não está inicializado.")
-        return None
-
-    # Buscar cliente no Supabase
     try:
-        st.write("🔎 DEBUG: Buscando cliente na tabela 'clientes'...")
         resp = (
-            supabase.table("clientes")
+            supabase
+            .table("clientes")
             .select("*")
             .eq("token", token)
             .single()
@@ -103,27 +87,23 @@ def carregar_cliente_pelo_token():
         st.write("🔎 DEBUG: Resposta do Supabase:", resp)
         cliente = resp.data
     except Exception as e:
-        st.error("❌ ERRO ao consultar tabela clientes.")
-        st.write(e)
+        st.error("❌ Erro Supabase ao buscar cliente.")
+        st.exception(e)
         return None
 
     if not cliente:
-        st.write("🔎 DEBUG: Nenhum cliente encontrado com o token fornecido.")
+        st.write("❌ DEBUG: Nenhum cliente corresponde a esse token.")
         return None
 
-    # Armazenar na sessão
     st.session_state["cliente"] = cliente
-    st.write("🔎 DEBUG: Cliente salvo no session_state.")
-
+    st.write("✅ DEBUG: Cliente carregado e salvo na sessão.")
     return cliente
 
 
-# ==========================
-# 4️⃣ Carregar cliente
-# ==========================
 cliente = carregar_cliente_pelo_token()
 
-st.write("🔎 DEBUG: Cliente carregado =", cliente)
+st.write("🔎 DEBUG: Cliente final =", cliente)
+
 
 
 # ============================
