@@ -1,48 +1,15 @@
-import datetime
-import pandas as pd
-import plotly.graph_objects as go
 import streamlit as st
-
-from carteiras_bridge import (
-    curto_state,
-    loss_state,
-    get_indice_ativo,
-    supabase_select,
-)
-
-
 from supabase import create_client, Client
-import requests
-import fenix_opcoes.supabase_ops as supabase_ops_mod
-
-# ===== IMPORT PARA TABELA SQL DE OPÇÕES =====
-def supabase_select_opcoes(query_string: str):
-    """
-    Wrapper igual ao supabase_select, mas apontando para a tabela opcoes_operacoes.
-    """
-    return supabase_select("opcoes_operacoes", query_string)
-
-REST_ENDPOINT_OP = getattr(supabase_ops_mod, "REST_ENDPOINT", None)
-HEADERS_OP = getattr(supabase_ops_mod, "HEADERS", None)
-
-LINK_ASSINAR = "https://app.infinitepay.io/products"
-
 
 # ======================================
-# 🔐 AUTENTICAÇÃO VIA LINK MÁGICO – V1
-# ======================================
-
-
-
-# ===========================
 # 🔗 Credenciais — Iguais ao CRM
-# ===========================
+# ======================================
 SUPABASE_URL = st.secrets["SUPABASE_URL_CLIENTES"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY_CLIENTES"]
 
-# ===========================
+# ======================================
 # 🧪 DEBUG
-# ===========================
+# ======================================
 st.write("🔎 DEBUG: Conectando Supabase (versão CRM)...")
 st.write("🔎 URL:", SUPABASE_URL)
 st.write("🔎 KEY prefix:", SUPABASE_KEY[:4])
@@ -56,9 +23,9 @@ except Exception as e:
     st.stop()
 
 
-# ===========================
+# ======================================
 # 🔐 Função para carregar cliente
-# ===========================
+# ======================================
 def carregar_cliente_pelo_token():
     st.write("🔎 DEBUG: Iniciando leitura do token...")
 
@@ -100,39 +67,84 @@ def carregar_cliente_pelo_token():
     return cliente
 
 
+# ======================================
+# 🔐 AUTENTICAÇÃO — TEM QUE SER ANTES DE QUALQUER OUTRO IMPORT
+# ======================================
 cliente = carregar_cliente_pelo_token()
-
 st.write("🔎 DEBUG: Cliente final =", cliente)
 
+if not cliente:
+    st.markdown("---")
+    st.markdown("## Área de Assinaturas")
+    st.markdown("### 👋 Olá, visitante!")
+    st.write("Use o link mágico enviado ao seu e-mail para visualizar suas assinaturas.")
+    st.stop()  # ⛔ PARA TUDO AQUI
 
 
-# ============================
+# ======================================================================
+# 🔥 IMPORTS PESADOS (só devem rodar após o login)
+# ======================================================================
+import datetime
+import pandas as pd
+import plotly.graph_objects as go
+import requests
+
+from carteiras_bridge import (
+    curto_state,
+    loss_state,
+    get_indice_ativo,
+    supabase_select,
+)
+
+import fenix_opcoes.supabase_ops as supabase_ops_mod
+
+
+# ===== IMPORT PARA TABELA SQL DE OPÇÕES =====
+def supabase_select_opcoes(query_string: str):
+    """
+    Wrapper igual ao supabase_select, mas apontando para a tabela opcoes_operacoes.
+    """
+    return supabase_select("opcoes_operacoes", query_string)
+
+REST_ENDPOINT_OP = getattr(supabase_ops_mod, "REST_ENDPOINT", None)
+HEADERS_OP = getattr(supabase_ops_mod, "HEADERS", None)
+
+LINK_ASSINAR = "https://app.infinitepay.io/products"
+
+
+# ============================================================
+# MAPA CORRETO — SUPABASE → ARQUIVOS DAS PAGES
+# ============================================================
+MAPA_SUPABASE_PARA_PAGE = {
+    "Carteira de Ações IBOV": "carteira_ibov",
+    "Carteira de Opções": "carteira_opcoes",
+    "Carteira de Small Caps": "carteira_small",
+    "Carteira de BDRs": "carteira_bdr",
+}
+
+
+# ============================================================
 # ÁREA SUPERIOR DO DASHBOARD (V1)
-# ============================
+# ============================================================
 st.markdown("---")
 st.markdown("## Área de Assinaturas")
 
-if cliente:
-    nome = cliente.get("nome", "Investidor")
-    produtos = cliente.get("produtos", [])  # Certifique-se que é lista no Supabase
 
-    st.markdown(f"### 👋 Olá, **{nome}**!")
-    st.write("Essas são as suas assinaturas ativas:")
+nome = cliente.get("nome", "Investidor")
+carteiras = cliente.get("carteiras", [])  # a COLUNA CERTA do Supabase
 
-    MAPA_PRODUTOS = {
-        "Opcoes": "Carteira de Opções",
-        "SmallCaps": "Carteira Small Caps",
-        "IBOV": "Carteira IBOV",
-        "BDR": "Carteira BDR",
-    }
 
-    for cod in produtos:
-        label = MAPA_PRODUTOS.get(cod, cod)
-        st.button(label, key=f"assin_{cod}")
+st.markdown(f"### 👋 Olá, **{nome}**!")
+st.write("Essas são as suas assinaturas ativas:")
 
-else:
-    st.markdown("### 👋 Olá, visitante!")
-    st.write("Use o link mágico enviado ao seu e-mail para visualizar suas assinaturas.")
+for carteira in carteiras:
+    page = MAPA_SUPABASE_PARA_PAGE.get(carteira)
+
+    if page:
+        st.page_link(f"{page}.py", label=carteira)
+    else:
+        st.write(f"⚠️ Carteira sem página vinculada: {carteira}")
+
 
 
 
