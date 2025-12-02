@@ -1,92 +1,80 @@
 import streamlit as st
-from supabase import create_client, Client
+import requests
 
-st.set_page_config(page_title="Teste de Login", layout="centered")
+st.set_page_config(page_title="Teste Login REST", layout="centered")
 
-st.title("🔎 Teste de Login via Token")
-st.write("Página simples para testar a leitura do cliente exatamente igual ao CRM.")
-
-
-# ======================================================
-# 🔗 CREDENCIAIS — Exatamente como no CRM
-# ======================================================
+# =================================================
+# CONFIG (iguais ao CRM)
+# =================================================
 SUPABASE_URL = st.secrets["SUPABASE_URL_CLIENTES"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY_CLIENTES"]
 
-st.write("DEBUG → URL:", SUPABASE_URL)
-st.write("DEBUG → KEY prefix:", SUPABASE_KEY[:5])
+TABLE = "clientes"
+
+REST_URL = f"{SUPABASE_URL}/rest/v1/{TABLE}"
+
+HEADERS = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
+}
 
 
-# ======================================================
-# 🔗 Criar client Supabase usando a versão estável (CRM)
-# ======================================================
-try:
-    supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-    st.success("Supabase conectado com sucesso! (Modo CRM)")
-except Exception as e:
-    st.error("❌ ERRO ao criar cliente Supabase.")
-    st.exception(e)
+st.title("🔎 Teste Login via REST (sem supabase-py)")
+st.write("Usando a API REST nativa do Supabase")
+
+
+# =================================================
+# FUNÇÃO → Buscar cliente pelo token
+# =================================================
+def buscar_cliente(token):
+    query = f"?token=eq.{token}&select=*"
+
+    url = REST_URL + query
+    st.write("DEBUG → URL:", url)
+
+    resp = requests.get(url, headers=HEADERS)
+
+    st.write("DEBUG → Status:", resp.status_code)
+    st.write("DEBUG → Conteúdo bruto:", resp.text)
+
+    if resp.status_code != 200:
+        return None
+
+    data = resp.json()
+
+    if not data:
+        return None
+
+    return data[0]  # único registro
+
+
+# =================================================
+# Capturar token da URL
+# =================================================
+params = st.query_params
+token = params.get("token", None)
+
+st.write("DEBUG → Token:", token)
+
+if not token:
+    st.warning("Nenhum token encontrado.")
     st.stop()
 
 
-# ======================================================
-# 🔐 Função para buscar cliente pelo token
-# ======================================================
-def carregar_cliente():
-    st.write("DEBUG → Iniciando leitura do token...")
-
-    params = st.query_params
-    token = params.get("token", None)
-
-    st.write("DEBUG → Token recebido:", token)
-
-    if not token:
-        st.warning("Nenhum token na URL.")
-        return None
-
-    try:
-        resp = (
-            supabase
-            .table("clientes")
-            .select("*")
-            .eq("token", token)
-            .single()
-            .execute()
-        )
-        cliente = resp.data
-        st.write("DEBUG → Supabase resposta:", resp)
-    except Exception as e:
-        st.error("Erro Supabase ao buscar cliente.")
-        st.exception(e)
-        return None
-
-    return cliente
-
-
-# ======================================================
-# 🔐 Executar leitura
-# ======================================================
-cliente = carregar_cliente()
+# =================================================
+# Buscar cliente
+# =================================================
+cliente = buscar_cliente(token)
 
 st.markdown("---")
 
-# ======================================================
-# 📌 EXIBIR RESULTADO
-# ======================================================
 if not cliente:
     st.error("❌ Nenhum cliente encontrado para esse token.")
-    st.info("Use um link mágico válido enviado pelo CRM.")
 else:
     st.success("Cliente encontrado!")
-
-    st.write("### 👤 Dados do Cliente:")
     st.json(cliente)
 
-    st.write("### 🗂 Carteiras Ativas:")
     carteiras = cliente.get("carteiras", [])
-
-    if not carteiras:
-        st.warning("Cliente não possui carteiras registradas.")
-    else:
-        for c in carteiras:
-            st.write(f"- {c}")
+    st.write("### Carteiras:")
+    for c in carteiras:
+        st.write(f"- {c}")
