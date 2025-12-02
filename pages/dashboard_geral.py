@@ -927,7 +927,8 @@ for card in cards_data:
 # ===========================
 st.markdown("---")
 # ===========================
-# 🏆 Ranking Phoenix — Institucional
+# ===========================
+# 🏆 Ranking Phoenix — Institucional (sem emojis)
 # ===========================
 
 st.markdown("## Ranking Phoenix — Últimos 30 dias")
@@ -942,10 +943,12 @@ rank_assim = sorted(cards_data, key=lambda c: assimetria(c["stats"]), reverse=Tr
 st.markdown(f"""
 <div class='rank-card'>
   <div class='rank-title'>
-    <span class="material-symbols-outlined rank-icon">trending_up</span>
-    Melhor carteira geral — {rank_score['nome']}
+    {rank_score['emoji']} {rank_score['nome']}
   </div>
-  <div class='rank-sub'>Phoenix Score: {rank_score['score']}</div>
+  <div class='rank-sub'>
+    Melhor carteira geral<br>
+    Phoenix Score: {rank_score['score']}
+  </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -953,10 +956,12 @@ st.markdown(f"""
 st.markdown(f"""
 <div class='rank-card'>
   <div class='rank-title'>
-    <span class="material-symbols-outlined rank-icon">stacked_line_chart</span>
-    Maior retorno 30 dias — {rank_lucro['nome']}
+    {rank_lucro['emoji']} {rank_lucro['nome']}
   </div>
-  <div class='rank-sub'>Retorno acumulado: {rank_lucro['stats']['lucro_total_pct']:.1f}%</div>
+  <div class='rank-sub'>
+    Maior retorno em 30 dias<br>
+    Retorno acumulado: {rank_lucro['stats']['lucro_total_pct']:.1f}%
+  </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -964,10 +969,12 @@ st.markdown(f"""
 st.markdown(f"""
 <div class='rank-card'>
   <div class='rank-title'>
-    <span class="material-symbols-outlined rank-icon">target</span>
-    Maior consistência (winrate) — {rank_win['nome']}
+    {rank_win['emoji']} {rank_win['nome']}
   </div>
-  <div class='rank-sub'>Winrate: {(rank_win['stats']['winrate']*100):.1f}%</div>
+  <div class='rank-sub'>
+    Maior consistência (winrate)<br>
+    Winrate: {(rank_win['stats']['winrate']*100):.1f}%
+  </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -978,12 +985,15 @@ assim_str = "∞" if assim_val == float("inf") else f"{assim_val:.2f}x"
 st.markdown(f"""
 <div class='rank-card'>
   <div class='rank-title'>
-    <span class="material-symbols-outlined rank-icon">balance</span>
-    Melhor assimetria — {rank_assim['nome']}
+    {rank_assim['emoji']} {rank_assim['nome']}
   </div>
-  <div class='rank-sub'>Razão ganho/perda: {assim_str}</div>
+  <div class='rank-sub'>
+    Melhor assimetria<br>
+    Razão ganho/perda: {assim_str}
+  </div>
 </div>
 """, unsafe_allow_html=True)
+
 
 
 
