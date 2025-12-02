@@ -43,24 +43,31 @@ def carregar_cliente_pelo_token():
         return None
 
     try:
+        # 🚫 REMOVIDO .single() (que travava tudo)
         resp = (
             supabase
             .table("clientes")
             .select("*")
             .eq("token", token)
-            .single()
             .execute()
         )
         st.write("🔎 DEBUG: Resposta do Supabase:", resp)
-        cliente = resp.data
+
     except Exception as e:
         st.error("❌ Erro Supabase ao buscar cliente.")
         st.exception(e)
         return None
 
-    if not cliente:
+    dados = resp.data or []
+
+    if len(dados) == 0:
         st.write("❌ DEBUG: Nenhum cliente corresponde a esse token.")
         return None
+
+    if len(dados) > 1:
+        st.write("⚠️ DEBUG: Token duplicado! Usando o primeiro registro.")
+
+    cliente = dados[0]
 
     st.session_state["cliente"] = cliente
     st.write("✅ DEBUG: Cliente carregado e salvo na sessão.")
@@ -129,10 +136,8 @@ MAPA_SUPABASE_PARA_PAGE = {
 st.markdown("---")
 st.markdown("## Área de Assinaturas")
 
-
 nome = cliente.get("nome", "Investidor")
 carteiras = cliente.get("carteiras", [])  # a COLUNA CERTA do Supabase
-
 
 st.markdown(f"### 👋 Olá, **{nome}**!")
 st.write("Essas são as suas assinaturas ativas:")
@@ -141,7 +146,8 @@ for carteira in carteiras:
     page = MAPA_SUPABASE_PARA_PAGE.get(carteira)
 
     if page:
-        st.page_link(f"{page}.py", label=carteira)
+        # 👉 CORREÇÃO: pages/ + nome do arquivo
+        st.page_link(f"pages/{page}.py", label=carteira)
     else:
         st.write(f"⚠️ Carteira sem página vinculada: {carteira}")
 
