@@ -1,19 +1,31 @@
-import streamlit as st
-import requests
 import datetime
+import pandas as pd
+import plotly.graph_objects as go
+import streamlit as st
+
+from carteiras_bridge import (
+    curto_state,
+    loss_state,
+    get_indice_ativo,
+    supabase_select,
+)
 
 
-st.set_page_config(page_title="Dashboard Geral", layout="wide")
 
-st.title("📊 Dashboard Geral – Projeto Phoenix")
-st.write("Versão de teste — apenas leitura do cliente via REST.")
+import requests
+import fenix_opcoes.supabase_ops as supabase_ops_mod
 
+# ===== IMPORT PARA TABELA SQL DE OPÇÕES =====
+def supabase_select_opcoes(query_string: str):
+    """
+    Wrapper igual ao supabase_select, mas apontando para a tabela opcoes_operacoes.
+    """
+    return supabase_select("opcoes_operacoes", query_string)
 
+REST_ENDPOINT_OP = getattr(supabase_ops_mod, "REST_ENDPOINT", None)
+HEADERS_OP = getattr(supabase_ops_mod, "HEADERS", None)
 
-
-
-
-
+LINK_ASSINAR = "https://app.infinitepay.io/products"
 
 
 
