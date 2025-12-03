@@ -40,37 +40,40 @@ import fenix_opcoes.supabase_ops as supabase_ops_mod
 # ============================================================
 def getenv(key: str) -> str:
     """
-    Carrega variáveis de ambiente de forma robusta:
-    1) Sempre tenta os.environ primeiro (Render)
-    2) Se não existir, tenta st.secrets
-    3) strip() remove \n, \r, espaços, tabs e BOM
+    Carrega variáveis em ordem de prioridade:
+    1) os.environ  (Render + local terminal)
+    2) st.secrets  (Streamlit local)
+    Sempre aplica strip() para remover \n, \r, espaços e BOM.
     """
-    val = os.getenv(key, "")
-    if val:
+    # 1) ENV normal
+    val = os.getenv(key)
+    if val is not None and val.strip() != "":
         return val.strip()
 
+    # 2) Streamlit secrets
     try:
-        return str(st.secrets.get(key, "")).strip()
+        val = st.secrets.get(key, "")
+        if val:
+            return str(val).strip()
     except Exception:
-        return ""
+        pass
+
+    return ""
 
 
-# ============================================================
-# 🔐 ENV já normalizadas (sem \n, BOM, etc.)
-# ============================================================
+# 🔐 Carrega as ENV já limpas
 OPLAB_API_KEY  = getenv("OPLAB_API_KEY")
 OPLAB_BASE_URL = getenv("OPLAB_BASE_URL") or "https://api.oplab.com.br/v3"
 OPLAB_BASE_URL = OPLAB_BASE_URL.rstrip("/")
 
 
-# ============================================================
-# 🔑 HEADERS OFICIAIS — OPLAB v3 usa Authorization: Bearer
-# ============================================================
+# 🔐 Header correto para o endpoint /market/options
 def _headers():
     return {
-        "Authorization": f"Bearer {OPLAB_API_KEY}",
+        "Access-Token": OPLAB_API_KEY.strip(),
         "Accept": "application/json"
     }
+
 
 
 # ============================================================
