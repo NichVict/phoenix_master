@@ -33,9 +33,24 @@ import datetime as dt
 import yfinance as yf
 import logging
 
+def getenv(key: str) -> str:
+    if key in os.environ and os.environ[key].strip() != "":
+        return os.environ[key].strip()
+
+    try:
+        v = st.secrets.get(key, "")
+        if v:
+            return str(v).strip()
+    except:
+        pass
+
+    return ""
+
+
 # === SUPABASE CLIENTES (CRM / LEADS DASHBOARD) ===
-SUPABASE_URL_CLIENTES = st.secrets.get("supabase_url_clientes", "")
-SUPABASE_KEY_CLIENTES = st.secrets.get("supabase_key_clientes", "")
+SUPABASE_URL = getenv("supabase_url_operacoes")
+SUPABASE_KEY = getenv("supabase_key_operacoes")
+
 
 
 
@@ -213,8 +228,8 @@ def get_supabase_client():
     supabase_url_curto e supabase_key_curto.
     Necessário para load_state_curto().
     """
-    url = st.secrets.get("supabase_url_curto", "")
-    key = st.secrets.get("supabase_key_curto", "")
+    url = getenv("supabase_url_curto")
+    key = getenv("supabase_key_curto")
 
     if not url or not key:
         raise RuntimeError("Supabase URL/Key do Curto não encontradas no st.secrets.")
@@ -234,8 +249,8 @@ DEFAULT_PARAMS = {
 
 # ========= FUNÇÃO FINAL PARA LER O ROBÔ CURTO VIA REST =========
 def load_state_curto() -> RoboState:
-    url = st.secrets.get("supabase_url_curto", "")
-    key = st.secrets.get("supabase_key_curto", "")
+    url = getenv("supabase_url_curto")
+    key = getenv("supabase_key_curto")
     tabela = "kv_state_curto"
     chave_k = "curto_przo_v1"
 
@@ -305,8 +320,8 @@ def load_state_curto() -> RoboState:
 
 
 def load_state_loss_curto() -> RoboState:
-    url = st.secrets.get("supabase_url_losscurto", "")
-    key = st.secrets.get("supabase_key_losscurto", "")
+    url = getenv("supabase_url_losscurto")
+    key = getenv("supabase_key_losscurto")
     tabela = "kv_state_losscurto"
     chave_k = "loss_curto_przo_v1"
 
@@ -1202,8 +1217,8 @@ if secao == "Painel":
             loaded_visual[robo["key"]] = state
             s = summarize_visual_state(state)
         else:
-            sb_url = st.secrets.get(robo["sb_url_secret"], "")
-            sb_key = st.secrets.get(robo["sb_key_secret"], "")
+            sb_url = getenv(robo["sb_url_secret"])
+            sb_key = getenv(robo["sb_key_secret"])
             sb_v = ler_estado_supabase(sb_url, sb_key, robo["sb_table"], robo["sb_key"])
             sb_cache[robo["key"]] = sb_v
             s = summarize_supabase_state(sb_v)
@@ -1230,8 +1245,8 @@ if secao == "Painel":
         robo_nome = robo["title"]
     
         # leitura direta do Supabase (sem usar cache antigo)
-        sb_url = st.secrets.get(robo["sb_url_secret"], "")
-        sb_key = st.secrets.get(robo["sb_key_secret"], "")
+        sb_url = getenv(robo["sb_url_secret"])
+        sb_key = getenv(robo["sb_key_secret"])
         sb_v = ler_estado_supabase(sb_url, sb_key, robo["sb_table"], robo["sb_key"])
         if not sb_v or not isinstance(sb_v, dict):
             continue
@@ -1318,8 +1333,8 @@ if secao == "Painel":
             sb_v = sb_cache.get(key)
     
             if sb_v is None and not visual:
-                sb_url = st.secrets.get(robo["sb_url_secret"], "")
-                sb_key = st.secrets.get(robo["sb_key_secret"], "")
+                sb_url = getenv(robo["sb_url_secret"])
+                sb_key = getenv(robo["sb_key_secret"])
                 sb_v = ler_estado_supabase(sb_url, sb_key, robo["sb_table"], robo["sb_key"])
     
             # ---- resumo base ----
@@ -2411,8 +2426,8 @@ if secao == "Relatórios":
         registros = []
     
         for robo in ROBOS:
-            sb_url = st.secrets.get(robo["sb_url_secret"], "")
-            sb_key = st.secrets.get(robo["sb_key_secret"], "")
+            sb_url = getenv(robo["sb_url_secret"])
+            sb_key = getenv(robo["sb_key_secret"])
             tabela = robo["sb_table"]
             chave = robo["sb_key"]
     
@@ -2666,8 +2681,8 @@ if secao == "Relatórios":
                 if not cfg:
                     return None
                 return {
-                    "sb_url": st.secrets.get(cfg["sb_url_secret"], ""),
-                    "sb_key": st.secrets.get(cfg["sb_key_secret"], ""),
+                    "sb_url": getenv(cfg["sb_url_secret"]),
+                    "sb_key": getenv(cfg["sb_key_secret"]),
                     "sb_table": cfg["sb_table"],
                     "sb_k": cfg["sb_key"],
                     "title": cfg["title"],
@@ -2731,8 +2746,8 @@ if secao == "Relatórios":
                     if not cfg:
                         return None
                     return {
-                        "sb_url": st.secrets.get(cfg["sb_url_secret"], ""),
-                        "sb_key": st.secrets.get(cfg["sb_key_secret"], ""),
+                        "sb_url": getenv(cfg["sb_url_secret"]),
+                        "sb_key": getenv(cfg["sb_key_secret"]),
                         "sb_table": cfg["sb_table"],
                         "sb_k": cfg["sb_key"],
                     }
