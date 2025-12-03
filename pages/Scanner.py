@@ -112,8 +112,14 @@ OPLAB_BASE_URL = getenv("OPLAB_BASE_URL") or "https://api.oplab.com.br/v3"
 OPLAB_BASE_URL = OPLAB_BASE_URL.rstrip("/")
 
 
+#def _headers():
+    #return {"Access-Token": OPLAB_API_KEY, "accept": "application/json"}
+
 def _headers():
-    return {"Access-Token": OPLAB_API_KEY, "accept": "application/json"}
+    return {
+        "Access-Token": OPLAB_API_KEY.strip(),
+        "accept": "application/json"
+    }
 
 def _to_num(x): 
     return pd.to_numeric(x, errors="coerce")
