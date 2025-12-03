@@ -1,24 +1,33 @@
 import streamlit as st
 
-# =====================================
-#  MENSAGEM DE BOAS-VINDAS PERSONALIZADA
-# =====================================
+st.set_page_config(
+    page_title="Fênix Premium",
+    page_icon="🦅",
+    layout="wide"
+)
 
-user = get_session_user()  # retorna dict ou None
+st.title("🦅 Fênix Premium")
+st.info("Menu lateral totalmente liberado. Todas as carteiras e ferramentas estão acessíveis.")
 
-if user:
-    nome = user.get("nome", "Cliente")
-    carteiras = user.get("carteiras_crm", [])
+# ===========================
+#  BOAS-VINDAS AO CLIENTE
+# ===========================
 
-    st.markdown(f"### 👋 Bem-vindo, **{nome}**!")
-    st.markdown(
-        "Você agora tem acesso ao seu painel premium Fênix. "
-        "Abaixo estão as carteiras incluídas na sua assinatura:"
-    )
+if "logged" in st.session_state and st.session_state["logged"]:
+    cliente = st.session_state.get("cliente", {})
+    nome = cliente.get("nome", "Investidor")
+    carteiras = cliente.get("page_ids", [])
 
-    # Lista das carteiras assinadas
-    for c in carteiras:
-        st.markdown(f"- **{c}**")
+    st.success(f"👋 Bem-vindo, **{nome}**!")
 
-    st.info("👉 Utilize o menu lateral (sidebar) para navegar pelas carteiras e visualizar a performance em tempo real.")
+    st.markdown("### 📂 Suas carteiras ativas:")
+    
+    if carteiras:
+        for c in carteiras:
+            st.markdown(f"- **{c.replace('_', ' ').title()}**")
+    else:
+        st.warning("Nenhuma carteira ativa no momento.")
+
+    st.info("👉 Use o menu lateral para acessar o desempenho das suas carteiras em tempo real.")
+
 
