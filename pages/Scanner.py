@@ -25,49 +25,71 @@ import numpy as np
 import pandas as pd
 import requests, yfinance as yf
 import streamlit as st
-#from dotenv import load_dotenv, find_dotenv
 import plotly.graph_objects as go
+
 from scipy.stats import norm
 from scipy.optimize import brentq
+
 from fenix_opcoes.supabase_ops import inserir_operacao
 from fenix_opcoes.notificacoes import enviar_email, enviar_telegram
 import fenix_opcoes.supabase_ops as supabase_ops_mod
 
+
+# ============================================================
+# 🔐 ENV: Carregamento seguro e à prova de newline invisível
+# ============================================================
 def getenv(key: str) -> str:
     """
-    Fallback automático:
-    1) Tenta pegar do ambiente (Render)
-    2) Tenta pegar do st.secrets (local ou Cloud)
-    3) Retorna string vazia para evitar crash
+    Carrega variáveis de ambiente de forma robusta:
+    1) Sempre tenta os.environ primeiro (Render)
+    2) Se não existir, tenta st.secrets
+    3) strip() remove \n, \r, espaços, tabs e BOM
     """
-    if key in os.environ:
-        return os.environ[key]
+    val = os.getenv(key, "")
+    if val:
+        return val.strip()
 
     try:
-        return st.secrets[key]
+        return str(st.secrets.get(key, "")).strip()
     except Exception:
         return ""
 
 
+# ============================================================
+# 🔐 ENV já normalizadas (sem \n, BOM, etc.)
+# ============================================================
+OPLAB_API_KEY  = getenv("OPLAB_API_KEY")
+OPLAB_BASE_URL = getenv("OPLAB_BASE_URL") or "https://api.oplab.com.br/v3"
+OPLAB_BASE_URL = OPLAB_BASE_URL.rstrip("/")
 
-# ===============================
 
-# Config inicial e layout responsivo
-# ===============================
+# ============================================================
+# 🔑 HEADERS OFICIAIS — OPLAB v3 usa Authorization: Bearer
+# ============================================================
+def _headers():
+    return {
+        "Authorization": f"Bearer {OPLAB_API_KEY}",
+        "Accept": "application/json"
+    }
+
+
+# ============================================================
+# ⚙️ Config inicial do Streamlit
+# ============================================================
 st.set_page_config(
     page_title="Scanner de Opções",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-
-# CSS — Reduzir tamanho da fonte da sidebar
-# ===============================
+# ============================================================
+# 🎨 CSS — Estilo da sidebar
+# ============================================================
 st.markdown("""
 <style>
 /* 🔹 Sidebar: fonte geral menor e mais compacta */
 section[data-testid="stSidebar"] {
-    font-size: 0.85rem !important;      /* reduz o texto geral */
+    font-size: 0.85rem !important;
 }
 
 /* 🔹 Ajusta inputs, sliders, radios e checkboxes */
@@ -82,7 +104,7 @@ section[data-testid="stSidebar"] .stCheckbox label {
     font-size: 0.82rem !important;
 }
 
-/* 🔹 Sliders e valores numéricos */
+/* 🔹 Sliders e números */
 section[data-testid="stSidebar"] .stSlider {
     font-size: 0.8rem !important;
 }
@@ -93,33 +115,14 @@ section[data-testid="stSidebar"] button {
     padding: 0.4rem 0.6rem !important;
 }
 
-/* 🔹 Título da sidebar (ex: "⚙️ Parâmetros do Scanner") */
-section[data-testid="stSidebar"] h1, 
-section[data-testid="stSidebar"] h2, 
+/* 🔹 Títulos */
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
 section[data-testid="stSidebar"] h3 {
     font-size: 1rem !important;
 }
 </style>
 """, unsafe_allow_html=True)
-
-
-
-
-
-#load_dotenv(find_dotenv(), override=True)
-OPLAB_API_KEY  = getenv("OPLAB_API_KEY")
-OPLAB_BASE_URL = getenv("OPLAB_BASE_URL") or "https://api.oplab.com.br/v3"
-OPLAB_BASE_URL = OPLAB_BASE_URL.rstrip("/")
-
-
-#def _headers():
-    #return {"Access-Token": OPLAB_API_KEY, "accept": "application/json"}
-
-def _headers():
-    return {
-        "Access-Token": OPLAB_API_KEY.strip(),
-        "accept": "application/json"
-    }
 
 def _to_num(x): 
     return pd.to_numeric(x, errors="coerce")
