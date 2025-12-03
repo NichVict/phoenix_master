@@ -1,11 +1,21 @@
-# -*- coding: utf-8 -*-
 from auth import user_logged, user_has_access
 import streamlit as st
 
-PAGE_ID = "carteira_ibov"
+PAGE_ID = "carteira_ibov"   # altere para cada página
 
-if not user_logged() or not user_has_access(PAGE_ID):
-    st.switch_page("login")
+# ==========================
+# 🚫 BLOQUEIO DE ACESSO
+# ==========================
+if not user_logged():
+    st.error("⚠ Você não está autenticado.")
+    st.button("🔐 Ir para Login", on_click=lambda: st.switch_page("login.py"))
+    st.stop()
+
+if not user_has_access(PAGE_ID):
+    st.error("🚫 Você não tem acesso a esta carteira.")
+    st.button("🏠 Voltar ao Dashboard Geral", on_click=lambda: st.switch_page("dashboard_geral.py"))
+    st.stop()
+
 
 
 import os
