@@ -34,8 +34,29 @@ import yfinance as yf
 import logging
 
 # === SUPABASE CLIENTES (CRM / LEADS DASHBOARD) ===
-SUPABASE_URL_CLIENTES = st.secrets.get("supabase_url_clientes", "")
-SUPABASE_KEY_CLIENTES = st.secrets.get("supabase_key_clientes", "")
+
+def getenv(key: str) -> str:
+    """
+    1) Tenta os.environ  (Render, terminal)
+    2) Tenta st.secrets  (Streamlit local)
+    3) Se nada existir, retorna ''
+    """
+    if key in os.environ and os.environ[key].strip() != "":
+        return os.environ[key].strip()
+
+    try:
+        val = st.secrets.get(key, "")
+        if val:
+            return str(val).strip()
+    except:
+        pass
+
+    return ""
+
+# === SUPABASE CLIENTES (CRM / LEADS DASHBOARD) ===
+SUPABASE_URL_CLIENTES = getenv("supabase_url_clientes")
+SUPABASE_KEY_CLIENTES = getenv("supabase_key_clientes")
+
 
 
 
@@ -568,8 +589,9 @@ def ler_estado_supabase(url: str, key: str, tabela: str, chave_k: str) -> Dict[s
 # -------------------------------------------------
 # SUPABASE — REST API (para anon key no Streamlit Cloud)
 # -------------------------------------------------
-SUPABASE_URL = st.secrets["supabase_url_operacoes"]
-SUPABASE_KEY = st.secrets["supabase_key_operacoes"]
+SUPABASE_URL = getenv("supabase_url_operacoes")
+SUPABASE_KEY = getenv("supabase_key_operacoes")
+
 
 def supabase_insert(table: str, data: dict):
     url = f"{SUPABASE_URL}/rest/v1/{table}"
