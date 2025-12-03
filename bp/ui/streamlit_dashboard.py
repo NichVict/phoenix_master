@@ -14,13 +14,32 @@ from bp.ui.radar_chart import plot_radar
 
 
 # ------------------------------------------------------------
-# 🔐 SUPABASE – envio automático de sinais do Fênix
+# 🔐 SUPABASE – compatível com Render + Streamlit local
 # ------------------------------------------------------------
-SUPABASE_URL = st.secrets["supabase_url_curto"]
-SUPABASE_KEY = st.secrets["supabase_key_curto"]
+
+def getenv(key: str) -> str:
+    """
+    Fallback automático:
+    1) Tenta pegar do ambiente (Render via .env)
+    2) Tenta pegar do st.secrets (local ou Cloud)
+    3) Retorna string vazia para evitar crash
+    """
+    if key in os.environ:
+        return os.environ[key]
+
+    try:
+        return st.secrets[key]
+    except Exception:
+        return ""
+
+
+# → AGORA FUNCIONA EM QUALQUER AMBIENTE
+SUPABASE_URL = getenv("supabase_url_curto")
+SUPABASE_KEY = getenv("supabase_key_curto")
 
 SUPABASE_TABLE = "kv_state_curto"
 STATE_KEY = "curto_przo_v1"
+
 
 st.markdown("""
 <style>
