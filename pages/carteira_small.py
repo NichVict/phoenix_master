@@ -948,8 +948,8 @@ if secao == "Painel":
             loaded_visual[robo["key"]] = state
             s = summarize_visual_state(state)
         else:
-            sb_url = st.secrets.get(robo["sb_url_secret"], "")
-            sb_key = st.secrets.get(robo["sb_key_secret"], "")
+            sb_url = getenv(robo["sb_url_secret"], "")
+            sb_key = getenv(robo["sb_key_secret"], "")
             sb_v = ler_estado_supabase(sb_url, sb_key, robo["sb_table"], robo["sb_key"])
             sb_cache[robo["key"]] = sb_v
             s = summarize_supabase_state(sb_v)
@@ -976,8 +976,8 @@ if secao == "Painel":
         robo_nome = robo["title"]
     
         # leitura direta do Supabase (sem usar cache antigo)
-        sb_url = st.secrets.get(robo["sb_url_secret"], "")
-        sb_key = st.secrets.get(robo["sb_key_secret"], "")
+        sb_url = getenv(robo["sb_url_secret"], "")
+        sb_key = getenv(robo["sb_key_secret"], "")
         sb_v = ler_estado_supabase(sb_url, sb_key, robo["sb_table"], robo["sb_key"])
         if not sb_v or not isinstance(sb_v, dict):
             continue
@@ -1064,8 +1064,8 @@ if secao == "Painel":
             sb_v = sb_cache.get(key)
     
             if sb_v is None and not visual:
-                sb_url = st.secrets.get(robo["sb_url_secret"], "")
-                sb_key = st.secrets.get(robo["sb_key_secret"], "")
+                sb_url = getenv(robo["sb_url_secret"], "")
+                sb_key = getenv(robo["sb_key_secret"], "")
                 sb_v = ler_estado_supabase(sb_url, sb_key, robo["sb_table"], robo["sb_key"])
     
             # ---- resumo base ----
@@ -2069,8 +2069,8 @@ if secao == "Relatórios":
         registros = []
     
         for robo in ROBOS:
-            sb_url = st.secrets.get(robo["sb_url_secret"], "")
-            sb_key = st.secrets.get(robo["sb_key_secret"], "")
+            sb_url = getenv(robo["sb_url_secret"], "")
+            sb_key = getenv(robo["sb_key_secret"], "")
             tabela = robo["sb_table"]
             chave = robo["sb_key"]
     
