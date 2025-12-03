@@ -33,6 +33,20 @@ from fenix_opcoes.supabase_ops import inserir_operacao
 from fenix_opcoes.notificacoes import enviar_email, enviar_telegram
 import fenix_opcoes.supabase_ops as supabase_ops_mod
 
+def getenv(key: str) -> str:
+    """
+    Fallback automático:
+    1) Tenta pegar do ambiente (Render)
+    2) Tenta pegar do st.secrets (local ou Cloud)
+    3) Retorna string vazia para evitar crash
+    """
+    if key in os.environ:
+        return os.environ[key]
+
+    try:
+        return st.secrets[key]
+    except Exception:
+        return ""
 
 
 
@@ -93,8 +107,10 @@ section[data-testid="stSidebar"] h3 {
 
 
 #load_dotenv(find_dotenv(), override=True)
-OPLAB_API_KEY  = os.getenv("OPLAB_API_KEY", "")
-OPLAB_BASE_URL = os.getenv("OPLAB_BASE_URL", "https://api.oplab.com.br/v3/").rstrip("/")
+OPLAB_API_KEY  = getenv("OPLAB_API_KEY")
+OPLAB_BASE_URL = getenv("OPLAB_BASE_URL") or "https://api.oplab.com.br/v3"
+OPLAB_BASE_URL = OPLAB_BASE_URL.rstrip("/")
+
 
 def _headers():
     return {"Access-Token": OPLAB_API_KEY, "accept": "application/json"}
