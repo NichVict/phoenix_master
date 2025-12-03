@@ -19,7 +19,7 @@ requests
 lxml
 scipy
 tenacity
-supabase-py
+supabase
 psycopg2-binary
 reportlab
 python-telegram-bot==20.7
