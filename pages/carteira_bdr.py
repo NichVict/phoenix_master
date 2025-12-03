@@ -51,9 +51,7 @@ def getenv(key: str) -> str:
 
 
 
-# === SUPABASE CLIENTES (CRM / LEADS DASHBOARD) ===
-SUPABASE_URL_CLIENTES = getenv("supabase_url_clientes")
-SUPABASE_KEY_CLIENTES = getenv("supabase_key_clientes")
+
 
 
 
