@@ -1,5 +1,4 @@
 import streamlit as st
-from auth import get_session_user
 
 # =====================================
 #  MENSAGEM DE BOAS-VINDAS PERSONALIZADA
