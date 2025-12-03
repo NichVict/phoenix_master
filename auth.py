@@ -3,23 +3,21 @@ import os
 from typing import Optional, Dict, Any, Set
 
 import streamlit as st
-from supabase import create_client, ClientOptions
+import requests
 
 # ============================================
-# 🔧 FUNÇÃO AUXILIAR PARA LER VARIÁVEIS
+# 🔧 LEITURA DAS VARIÁVEIS DO SUPABASE (CLIENTES)
 # ============================================
-def getenv(key: str) -> str:
-    if key in os.environ and os.environ[key].strip() != "":
-        return os.environ[key].strip()
+SUPABASE_URL_CLIENTES = st.secrets["SUPABASE_URL_CLIENTES"]
+SUPABASE_KEY_CLIENTES = st.secrets["SUPABASE_KEY_CLIENTES"]
 
-    try:
-        v = st.secrets.get(key, "")
-        if v:
-            return str(v).strip()
-    except Exception:
-        pass
+CLIENTES_TABLE = "clientes"
+CLIENTES_REST_URL = f"{SUPABASE_URL_CLIENTES}/rest/v1/{CLIENTES_TABLE}"
 
-    return ""
+CLIENTES_HEADERS = {
+    "apikey": SUPABASE_KEY_CLIENTES,
+    "Authorization": f"Bearer {SUPABASE_KEY_CLIENTES}",
+}
 
 
 # ============================================
@@ -34,98 +32,63 @@ CRM_TO_PAGE_IDS: Dict[str, list[str]] = {
 
 
 # ============================================
-# 🔌 SUPABASE – CLIENTE PARA TABELA DE CLIENTES
-# ============================================
-SUPABASE_CLIENTES_TABLE = "clientes"
-
-def get_supabase_client_clientes():
-    url = getenv("supabase_url_clientes")
-    key = getenv("supabase_key_clientes")
-
-    if not url or not key:
-        raise RuntimeError(
-            "Erro: supabase_url_clientes ou supabase_key_clientes não encontrados."
-        )
-
-    options = ClientOptions().copy(update={"http2": False})
-    return create_client(url, key, options=options)
-
-
-# ============================================
-# 🔍 BUSCA CLIENTE PELO TOKEN
+# 🔍 BUSCA CLIENTE PELO TOKEN (REST OFICIAL)
 # ============================================
 def buscar_cliente_por_token(token: str) -> Optional[Dict[str, Any]]:
     """
-    Busca o cliente na tabela 'clientes' pelo token.
-    Campo esperado:
-        - token
-        - nome
-        - carteiras (string ou lista)
+    Versão oficial — usa a API REST do Supabase, 100% compatível com o CRM.
     """
 
     if not token:
         return None
 
-    try:
-        sb = get_supabase_client_clientes()
-    except Exception as e:
-        st.error(f"[AUTH] Erro ao conectar ao Supabase CLIENTES: {e}")
-        return None
+    query = f"?token=eq.{token}&select=*"
+    url = CLIENTES_REST_URL + query
 
     try:
-        # busca APENAS pelo token
-        resp = (
-            sb.table(SUPABASE_CLIENTES_TABLE)
-            .select("*")
-            .eq("token", token)
-            .limit(1)
-            .execute()
-        )
-    except Exception as e:
-        st.error(f"[AUTH] Erro ao consultar token no Supabase: {e}")
+        resp = requests.get(url, headers=CLIENTES_HEADERS)
+    except Exception:
         return None
 
-    rows = getattr(resp, "data", None) or []
-    if not rows:
-        return None  # token não existe
+    if resp.status_code != 200:
+        return None
 
-    row = rows[0]
+    data = resp.json()
+    if not data:
+        return None
 
-    # Extrair nome
-    nome = row.get("nome") or "Cliente"
+    row = data[0]
 
-    # Extrair carteiras
-    carteiras = row.get("carteiras", [])
-    if isinstance(carteiras, str):
-        # Aceita tanto "IBOV,BDR" quanto "['IBOV','BDR']"
-        if "," in carteiras:
-            carteiras = [c.strip() for c in carteiras.split(",")]
-        elif carteiras.startswith("["):
-            try:
-                carteiras = eval(carteiras)
-            except:
-                carteiras = [carteiras]
+    # Normaliza o formato das carteiras (string, lista, etc.)
+    carteiras_raw = row.get("carteiras", [])
+
+    if isinstance(carteiras_raw, str):
+        if "," in carteiras_raw:
+            carteiras = [c.strip() for c in carteiras_raw.split(",")]
+        else:
+            carteiras = [carteiras_raw]
+    elif isinstance(carteiras_raw, list):
+        carteiras = carteiras_raw
+    else:
+        carteiras = []
 
     return {
-        "nome": nome,
-        "carteiras_crm": carteiras
+        "nome": row.get("nome", "Cliente"),
+        "carteiras_crm": carteiras,
     }
-
-
 
 
 # ============================================
 # 🔁 TRADUZ CARTEIRAS DO CRM → PAGE IDs INTERNAS
 # ============================================
 def extrair_page_ids_do_cliente(cliente: Dict[str, Any]) -> Set[str]:
-    raw = cliente.get("carteiras_crm") or ""
+    raw = cliente.get("carteiras_crm", [])
 
-    if isinstance(raw, str):
-        carteiras_crm = [c.strip() for c in raw.split(",") if c.strip()]
-    elif isinstance(raw, list):
+    carteiras_crm = []
+    if isinstance(raw, list):
         carteiras_crm = raw
-    else:
-        carteiras_crm = []
+    elif isinstance(raw, str):
+        carteiras_crm = [c.strip() for c in raw.split(",") if c.strip()]
 
     page_ids: Set[str] = set()
 
@@ -134,7 +97,7 @@ def extrair_page_ids_do_cliente(cliente: Dict[str, Any]) -> Set[str]:
         for pid in ids:
             page_ids.add(pid)
 
-    # Dashboard Geral é sempre liberado para todos
+    # Dashboard geral SEMPRE liberado
     page_ids.add("dashboard_geral")
 
     return page_ids
@@ -148,8 +111,7 @@ def login_user(cliente: Dict[str, Any]) -> None:
 
     st.session_state["logged"] = True
     st.session_state["cliente"] = {
-        "email": cliente.get("email"),
-        "nome": cliente.get("nome"),
+        "nome": cliente.get("nome", "Cliente"),
         "page_ids": list(page_ids),
     }
 
@@ -163,6 +125,10 @@ def user_logged() -> bool:
     return bool(st.session_state.get("logged", False))
 
 
+def get_session_user() -> Optional[Dict[str, Any]]:
+    return st.session_state.get("cliente")
+
+
 def user_has_access(page_id: str) -> bool:
     if page_id == "dashboard_geral":
         return True
@@ -170,7 +136,7 @@ def user_has_access(page_id: str) -> bool:
     if not user_logged():
         return False
 
-    cliente = st.session_state.get("cliente") or {}
+    cliente = st.session_state.get("cliente", {})
     page_ids = {p.lower() for p in cliente.get("page_ids", [])}
 
     return page_id.lower() in page_ids
