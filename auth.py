@@ -55,37 +55,63 @@ def get_supabase_client_clientes():
 # 🔍 BUSCA CLIENTE PELO TOKEN
 # ============================================
 def buscar_cliente_por_token(token: str) -> Optional[Dict[str, Any]]:
+    """
+    Busca o cliente na tabela 'clientes' pelo token.
+    Campo esperado:
+        - token
+        - nome
+        - carteiras (string ou lista)
+    """
+
     if not token:
         return None
 
     try:
         sb = get_supabase_client_clientes()
-    except Exception:
+    except Exception as e:
+        st.error(f"[AUTH] Erro ao conectar ao Supabase CLIENTES: {e}")
         return None
 
     try:
+        # busca APENAS pelo token
         resp = (
             sb.table(SUPABASE_CLIENTES_TABLE)
             .select("*")
             .eq("token", token)
-            .eq("ativo", True)
             .limit(1)
             .execute()
         )
-    except Exception:
+    except Exception as e:
+        st.error(f"[AUTH] Erro ao consultar token no Supabase: {e}")
         return None
 
-    data = getattr(resp, "data", None) or []
-    if not data:
-        return None
+    rows = getattr(resp, "data", None) or []
+    if not rows:
+        return None  # token não existe
 
-    row = data[0]
+    row = rows[0]
+
+    # Extrair nome
+    nome = row.get("nome") or "Cliente"
+
+    # Extrair carteiras
+    carteiras = row.get("carteiras", [])
+    if isinstance(carteiras, str):
+        # Aceita tanto "IBOV,BDR" quanto "['IBOV','BDR']"
+        if "," in carteiras:
+            carteiras = [c.strip() for c in carteiras.split(",")]
+        elif carteiras.startswith("["):
+            try:
+                carteiras = eval(carteiras)
+            except:
+                carteiras = [carteiras]
 
     return {
-        "email": row.get("email"),
-        "nome": row.get("nome"),
-        "carteiras_crm": row.get("carteiras"),  # lista ou string
+        "nome": nome,
+        "carteiras_crm": carteiras
     }
+
+
 
 
 # ============================================
