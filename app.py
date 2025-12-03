@@ -30,7 +30,7 @@ st.sidebar.markdown("---")
 # 🔹 ÁREA ADMIN — AGORA TAMBÉM SEM RESTRIÇÃO
 st.sidebar.subheader("🔧 Ferramentas do Sistema")
 st.sidebar.page_link("pages/Scanner.py", label="🧠 Scanner Fênix")
-st.sidebar.page_link("pages/Dash_Ações.py", label="📈 Dash Ações")
+st.sidebar.page_link("pages/Dash_Acoes.py", label="📈 Dash Ações")
 st.sidebar.page_link("pages/bp_dashboard.py", label="🛠 Motor BP")
 
 # ========================
