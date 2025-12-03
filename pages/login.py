@@ -17,7 +17,7 @@ token = token[0] if isinstance(token, list) else token
 # 🔄 SE JÁ ESTÁ LOGADO, ENVIA PARA DASHBOARD
 # ============================================
 if user_logged():
-    st.switch_page("dashboard_geral")
+    st.switch_page("app.py")
 
 
 # ============================================
