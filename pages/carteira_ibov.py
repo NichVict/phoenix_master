@@ -253,8 +253,8 @@ DEFAULT_PARAMS = {
 
 # ========= FUNÇÃO FINAL PARA LER O ROBÔ CURTO VIA REST =========
 def load_state_curto() -> RoboState:
-    url = getenv("supabase_url_curto", "")
-    key = getenv("supabase_key_curto", "")
+    getenv("supabase_url_curto")
+    getenv("supabase_key_curto")
     tabela = "kv_state_curto"
     chave_k = "curto_przo_v1"
 
@@ -2068,8 +2068,8 @@ if secao == "Relatórios":
         registros = []
     
         for robo in ROBOS:
-            sb_url = getenv(robo["sb_url_secret"], "")
-            sb_key = getenv(robo["sb_key_secret"], "")
+            getenv(robo["sb_url_secret"])
+            getenv(robo["sb_key_secret"])
             tabela = robo["sb_table"]
             chave = robo["sb_key"]
     
