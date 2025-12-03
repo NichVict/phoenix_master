@@ -33,9 +33,27 @@ import datetime as dt
 import yfinance as yf
 import logging
 
+import os
+import streamlit as st
+
+def getenv(key: str) -> str:
+    """
+    1) Tenta os.environ  (Render, terminal)
+    2) Tenta st.secrets  (Streamlit local)
+    3) Se nada existir, retorna ''
+    """
+    if key in os.environ:
+        return os.environ[key]
+
+    try:
+        return st.secrets[key]
+    except Exception:
+        return ""
+
+
 # === SUPABASE CLIENTES (CRM / LEADS DASHBOARD) ===
-SUPABASE_URL_CLIENTES = st.secrets.get("supabase_url_clientes", "")
-SUPABASE_KEY_CLIENTES = st.secrets.get("supabase_key_clientes", "")
+SUPABASE_URL_CLIENTES = getenv("supabase_url_clientes")
+SUPABASE_KEY_CLIENTES = getenv("supabase_key_clientes")
 
 
 
