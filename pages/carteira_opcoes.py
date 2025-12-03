@@ -1,4 +1,14 @@
+
+from auth import user_logged, user_has_access
 import streamlit as st
+
+PAGE_ID = "carteira_opcoes"
+
+if not user_logged() or not user_has_access(PAGE_ID):
+    st.switch_page("login.py")
+
+
+
 import requests
 
 import os
