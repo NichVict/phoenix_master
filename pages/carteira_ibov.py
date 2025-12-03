@@ -2323,8 +2323,8 @@ if secao == "Relatórios":
                 if not cfg:
                     return None
                 return {
-                    "sb_url": getenv(cfg["sb_url_secret"], ""),
-                    "sb_key": getenv(cfg["sb_key_secret"], ""),
+                    "sb_url": st.secrets.get(cfg["sb_url_secret"], ""),
+                    "sb_key": st.secrets.get(cfg["sb_key_secret"], ""),
                     "sb_table": cfg["sb_table"],
                     "sb_k": cfg["sb_key"],
                     "title": cfg["title"],
@@ -2388,8 +2388,8 @@ if secao == "Relatórios":
                     if not cfg:
                         return None
                     return {
-                        "sb_url": getenv(cfg["sb_url_secret"], ""),
-                        "sb_key": getenv(cfg["sb_key_secret"], ""),
+                        "sb_url": st.secrets.getcfg["sb_url_secret"], ""),
+                        "sb_key": st.secrets.get(cfg["sb_key_secret"], ""),
                         "sb_table": cfg["sb_table"],
                         "sb_k": cfg["sb_key"],
                     }
@@ -4251,8 +4251,8 @@ if secao == "Relatórios":
         if not cfg:
             return None
         return {
-            "sb_url": getenv(cfg["sb_url_secret"], ""),
-            "sb_key": getenv(cfg["sb_key_secret"], ""),
+            "sb_url": st.secrets.get(cfg["sb_url_secret"], ""),
+            "sb_key": st.secrets.get(cfg["sb_key_secret"], ""),
             "sb_table": cfg["sb_table"],
             "sb_k": cfg["sb_key"],
             "title": cfg["title"],
