@@ -232,8 +232,8 @@ def get_supabase_client():
     supabase_url_curto e supabase_key_curto.
     Necessário para load_state_curto().
     """
-    url = getenv("supabase_url_curto", "")
-    key = getenv("supabase_key_curto", "")
+    sb_url = getenv(robo["sb_url_secret"])
+    sb_key = getenv(robo["sb_key_secret"])
 
     if not url or not key:
         raise RuntimeError("Supabase URL/Key do Curto não encontradas no st.secrets.")
@@ -1063,8 +1063,8 @@ if secao == "Painel":
             sb_v = sb_cache.get(key)
     
             if sb_v is None and not visual:
-                sb_url = getenv(robo["sb_url_secret"], "")
-                sb_key = getenv(robo["sb_key_secret"], "")
+                sb_url = getenv(robo["sb_url_secret"])
+                sb_key = getenv(robo["sb_key_secret"])
                 sb_v = ler_estado_supabase(sb_url, sb_key, robo["sb_table"], robo["sb_key"])
     
             # ---- resumo base ----
@@ -2388,7 +2388,7 @@ if secao == "Relatórios":
                     if not cfg:
                         return None
                     return {
-                        "sb_url": st.secrets.getcfg["sb_url_secret"], ""),
+                        "sb_url": st.secrets.get(cfg["sb_url_secret"], ""),
                         "sb_key": st.secrets.get(cfg["sb_key_secret"], ""),
                         "sb_table": cfg["sb_table"],
                         "sb_k": cfg["sb_key"],
