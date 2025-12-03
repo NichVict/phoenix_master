@@ -1,11 +1,18 @@
 # -*- coding: utf-8 -*-
+from auth import user_logged, user_has_access
+import streamlit as st
+
+PAGE_ID = "carteira_ibov"
+
+if not user_logged() or not user_has_access(PAGE_ID):
+    st.switch_page("login.py")
 
 
 import os
 import json
 import datetime
 from typing import Dict, Any, Optional, Tuple
-import streamlit as st
+
 import requests
 import plotly.graph_objects as go
 from streamlit_autorefresh import st_autorefresh
