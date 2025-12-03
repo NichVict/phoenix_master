@@ -860,8 +860,8 @@ def ler_estado_supabase(url: str, key: str, tabela: str, chave_k: str) -> Dict[s
 # -------------------------------------------------
 # SUPABASE — REST API (para anon key no Streamlit Cloud)
 # -------------------------------------------------
-SUPABASE_URL = st.secrets["supabase_url_operacoes"]
-SUPABASE_KEY = st.secrets["supabase_key_operacoes"]
+SUPABASE_URL = getenv("supabase_url_operacoes")
+SUPABASE_KEY = getenv("supabase_key_operacoes")
 
 def supabase_insert(table: str, data: dict):
     url = f"{SUPABASE_URL}/rest/v1/{table}"
