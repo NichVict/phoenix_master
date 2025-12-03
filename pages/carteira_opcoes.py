@@ -5,7 +5,7 @@ import streamlit as st
 PAGE_ID = "carteira_opcoes"
 
 if not user_logged() or not user_has_access(PAGE_ID):
-    st.switch_page("login.py")
+    st.switch_page("login")
 
 
 
