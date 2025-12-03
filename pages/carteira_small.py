@@ -1,12 +1,21 @@
-# -*- coding: utf-8 -*-
-
 from auth import user_logged, user_has_access
 import streamlit as st
 
-PAGE_ID = "carteira_small"
+PAGE_ID = "carteira_small"   # <-- altere o nome da carteira correspondente
 
-if not user_logged() or not user_has_access(PAGE_ID):
-    st.switch_page("login")
+# ==========================
+# 🚫 BLOQUEIO DE ACESSO
+# ==========================
+if not user_logged():
+    st.error("⚠ Você não está autenticado.")
+    st.page_link("login", label="Ir para login", icon="🔐")
+    st.stop()
+
+if not user_has_access(PAGE_ID):
+    st.error("🚫 Você não tem acesso a esta carteira.")
+    st.page_link("dashboard_geral", label="Voltar ao Painel Geral", icon="🏠")
+    st.stop()
+
 
 import os
 import json
