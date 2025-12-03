@@ -64,7 +64,7 @@ def getenv(key: str) -> str:
 # 🔐 Carrega as ENV já limpas
 OPLAB_API_KEY  = getenv("OPLAB_API_KEY")
 OPLAB_BASE_URL = getenv("OPLAB_BASE_URL") or "https://api.oplab.com.br/v3"
-OPLAB_BASE_URL = OPLAB_BASE_URL.rstrip("/")
+
 
 
 # 🔐 Header correto para o endpoint /market/options
