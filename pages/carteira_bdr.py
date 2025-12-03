@@ -1,19 +1,19 @@
 from auth import user_logged, user_has_access
 import streamlit as st
 
-PAGE_ID = "carteira_bdr"   # <-- altere o nome da carteira correspondente
+PAGE_ID = "carteira_bdr"   # altere para cada página
 
 # ==========================
 # 🚫 BLOQUEIO DE ACESSO
 # ==========================
 if not user_logged():
     st.error("⚠ Você não está autenticado.")
-    st.page_link("login", label="Ir para login", icon="🔐")
+    st.button("🔐 Ir para Login", on_click=lambda: st.switch_page("login.py"))
     st.stop()
 
 if not user_has_access(PAGE_ID):
     st.error("🚫 Você não tem acesso a esta carteira.")
-    st.page_link("dashboard_geral", label="Voltar ao Painel Geral", icon="🏠")
+    st.button("🏠 Voltar ao Dashboard Geral", on_click=lambda: st.switch_page("dashboard_geral.py"))
     st.stop()
 
 
