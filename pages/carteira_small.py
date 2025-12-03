@@ -978,8 +978,8 @@ if secao == "Painel":
         robo_nome = robo["title"]
     
         # leitura direta do Supabase (sem usar cache antigo)
-        sb_url = getenv(robo["sb_url_secret"], "")
-        sb_key = getenv(robo["sb_key_secret"], "")
+        sb_url = getenv(robo["sb_url_secret"])
+        sb_key = getenv(robo["sb_key_secret"])
         sb_v = ler_estado_supabase(sb_url, sb_key, robo["sb_table"], robo["sb_key"])
         if not sb_v or not isinstance(sb_v, dict):
             continue
