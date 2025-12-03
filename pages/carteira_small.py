@@ -13,7 +13,7 @@ if not user_logged():
 
 if not user_has_access(PAGE_ID):
     st.error("🚫 Você não tem acesso a esta carteira.")
-    st.button("🏠 Voltar ao Dashboard Geral", on_click=lambda: st.switch_page("dashboard_geral.py"))
+    st.button("🏠 Voltar ao Dashboard Geral", on_click=lambda: st.switch_page("dashboard_geral"))
     st.stop()
 
 
