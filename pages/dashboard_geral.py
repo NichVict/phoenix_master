@@ -20,12 +20,12 @@ else:
 # ======================================================
 # 🏷️ CABEÇALHO
 # ======================================================
-st.title("🦅 Dashboard Geral — Fênix Premium")
+#st.title("🦅 Dashboard Geral — Fênix Premium")
 
 if nome:
     st.success(f"Bem-vindo, **{nome}**! 👋")
 else:
-    st.info("Bem-vindo ao Fênix Premium! Faça login pelo link mágico para ver suas carteiras.")
+    st.info("Bem-vindo ao Phoenix Strategy! Faça login pelo link mágico para ver suas carteiras.")
 
 # ======================================================
 # 📂 CARTEIRAS DISPONÍVEIS
@@ -51,11 +51,11 @@ else:
 # 📣 SEÇÃO DE CHAMADA / OFERTA
 # ======================================================
 st.divider()
-st.markdown("""
+#st.markdown("""
 ### 💼 Conheça nossas carteiras premium
-Nossas carteiras exclusivas oferecem recomendações, análises atualizadas e performance comprovada.
-Use o menu lateral para explorar as opções disponíveis.
-""")
+#Nossas carteiras exclusivas oferecem recomendações, análises atualizadas e performance comprovada.
+#Use o menu lateral para explorar as opções disponíveis.
+#""")
 
 
 
@@ -342,7 +342,7 @@ border-radius:999px;
 # 🦅 TÍTULO
 # ===========================
 st.markdown(
-    "<div class='dashboard-title'>🦅 Dashboard Geral — Phoenix Premium</div>",
+    "<div class='dashboard-title'>🦅 Dashboard Phoenix Strategy</div>",
     unsafe_allow_html=True,
 )
 st.markdown(
@@ -906,16 +906,16 @@ def render_carteira(card_data):
     )
 
     # GRÁFICOS
-    c1, c2 = st.columns([1.35, 0.65])
-    with c1:
-        st.markdown("##### 📈 Performance recente (30d)")
-        fig_spark = sparkline_figure(stats)
-        if fig_spark:
-            st.plotly_chart(fig_spark, use_container_width=True)
-    with c2:
-        st.markdown("###### 📊 Assimetria Positiva")
-        fig_bar = barras_lucro_prejuizo(stats)
-        st.plotly_chart(fig_bar, use_container_width=True)
+    #c1, c2 = st.columns([1.35, 0.65])
+    #with c1:
+        #st.markdown("##### 📈 Performance recente (30d)")
+        #fig_spark = sparkline_figure(stats)
+        #if fig_spark:
+            #st.plotly_chart(fig_spark, use_container_width=True)
+    #with c2:
+        #st.markdown("###### 📊 Assimetria Positiva")
+        #fig_bar = barras_lucro_prejuizo(stats)
+        #st.plotly_chart(fig_bar, use_container_width=True)
 
 
 
