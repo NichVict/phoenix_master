@@ -90,7 +90,7 @@ import mplfinance as mpf
 # ===== BLOCO IMPORTADO DO ROBÔ CURTO =====
 
 from dataclasses import dataclass
-from typing import List, Dict, Any, Literal, Optional
+from typing import List, Dict, Any, Literal, Optional, Tuple
 import datetime as dt
 import yfinance as yf
 import logging
