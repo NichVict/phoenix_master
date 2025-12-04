@@ -1,10 +1,68 @@
+import streamlit as st
+from auth import user_logged
 
-# ultimo dashboard geral sem credencial clientes #
+PAGE_ID = "dashboard_geral"
+
+st.set_page_config(page_title="Dashboard Geral", page_icon="📊")
+
+# ======================================================
+# 👤 IDENTIDADE DO CLIENTE (logado OU visitante)
+# ======================================================
+cliente = st.session_state.get("cliente", {})
+
+if user_logged():
+    nome = cliente.get("nome", "Investidor")
+    carteiras = cliente.get("page_ids", [])
+else:
+    nome = None
+    carteiras = []
+
+# ======================================================
+# 🏷️ CABEÇALHO
+# ======================================================
+st.title("📊 Dashboard Geral — Fênix Premium")
+
+if nome:
+    st.success(f"Bem-vindo, **{nome}**! 👋")
+else:
+    st.info("Bem-vindo ao Fênix Premium! Faça login pelo link mágico para ver suas carteiras.")
+
+# ======================================================
+# 📂 CARTEIRAS DISPONÍVEIS
+# ======================================================
+st.markdown("### 📁 Suas assinaturas / carteiras:")
+
+if not user_logged():
+    st.warning("Faça login para ver suas carteiras personalizadas.")
+else:
+    if len(carteiras) <= 1:  # só tem dashboard_geral
+        st.warning(
+            """
+            **Você ainda não possui nenhuma assinatura ativa.**  
+            Explore nossas carteiras no menu lateral e conheça nossos produtos.
+            """
+        )
+    else:
+        for c in carteiras:
+            if c != "dashboard_geral":
+                st.markdown(f"- **{c.replace('_', ' ').title()}**")
+
+# ======================================================
+# 📣 SEÇÃO DE CHAMADA / OFERTA
+# ======================================================
+st.divider()
+st.markdown("""
+### 💼 Conheça nossas carteiras premium
+Nossas carteiras exclusivas oferecem recomendações, análises atualizadas e performance comprovada.
+Use o menu lateral para explorar as opções disponíveis.
+""")
+
+
 
 import datetime
 import pandas as pd
 import plotly.graph_objects as go
-import streamlit as st
+
 
 from carteiras_bridge import (
     curto_state,
