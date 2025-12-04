@@ -20,7 +20,7 @@ else:
 # ======================================================
 # 🏷️ CABEÇALHO
 # ======================================================
-st.title("📊 Dashboard Geral — Fênix Premium")
+st.title("🦅 Dashboard Geral — Fênix Premium")
 
 if nome:
     st.success(f"Bem-vindo, **{nome}**! 👋")
