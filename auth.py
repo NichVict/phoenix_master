@@ -137,7 +137,9 @@ def login_user(cliente: Dict[str, Any]) -> None:
             "nome": cliente["nome"],
             "page_ids": ["dashboard_geral", "carteira_ibov", "carteira_bdr",
                          "carteira_small", "carteira_opcoes"],
-            "admin": True
+            "admin": True,
+            "data_inicio": cliente.get("data_inicio"),
+            "data_fim": cliente.get("data_fim")
         }
         return
 
