@@ -3,7 +3,7 @@ from auth import user_logged
 
 PAGE_ID = "dashboard_geral"
 
-st.set_page_config(page_title="Dashboard Geral", page_icon="📊")
+st.set_page_config(page_title="Dashboard Geral", page_icon="🦅")
 
 # ======================================================
 # 👤 IDENTIDADE DO CLIENTE (logado OU visitante)
