@@ -1,7 +1,7 @@
 # =========================================================
 # 📄 TEMPLATE PADRÃO PARA PÁGINAS ADMIN — FÊNIX
 # =========================================================
-
+from __future__ import annotations
 import streamlit as st
 from auth import user_logged
 
@@ -70,7 +70,7 @@ if st.button("⬅️ Voltar ao Dashboard Geral"):
     st.switch_page("pages/dashboard_geral.py")
 
 
-from __future__ import annotations
+
 import os, math
 from datetime import datetime, timedelta, date
 
