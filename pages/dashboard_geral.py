@@ -43,29 +43,9 @@ else:
             """
         )
     else:
-        from datetime import datetime
-
-        def formatar(d):
-            try:
-                return datetime.strptime(d, "%Y-%m-%d").strftime("%d/%m/%Y")
-            except:
-                return d
-        
-        cliente = st.session_state.get("cliente", {})
-        
-        data_inicio = cliente.get("data_inicio")
-        data_fim = cliente.get("data_fim")
-        
-        if data_inicio and data_fim:
-            st.markdown(
-                f"• **Suas carteiras** – Vigência: **{formatar(data_inicio)}** até **{formatar(data_fim)}**"
-            )
-        
         for c in carteiras:
             if c != "dashboard_geral":
-                st.markdown(f"  - **{c.replace('_', ' ').title()}**")
-
-
+                st.markdown(f"- **{c.replace('_', ' ').title()}**")
 
 # ======================================================
 # 📣 SEÇÃO DE CHAMADA / OFERTA
