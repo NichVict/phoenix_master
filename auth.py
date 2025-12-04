@@ -127,13 +127,27 @@ def extrair_page_ids_do_cliente(cliente: Dict[str, Any]) -> Set[str]:
 # 🔐 CONTROLE DE SESSÃO
 # =========================================================
 def login_user(cliente: Dict[str, Any]) -> None:
+    if cliente.get("admin"):
+        # Admin tem acesso TOTAL
+        st.session_state["logged"] = True
+        st.session_state["cliente"] = {
+            "nome": cliente["nome"],
+            "page_ids": ["dashboard_geral", "carteira_ibov", "carteira_bdr",
+                         "carteira_small", "carteira_opcoes"],
+            "admin": True
+        }
+        return
+
+    # Usuário normal
     page_ids = extrair_page_ids_do_cliente(cliente)
 
     st.session_state["logged"] = True
     st.session_state["cliente"] = {
         "nome": cliente.get("nome"),
         "page_ids": list(page_ids),
+        "admin": False
     }
+
 
 
 def logout_user() -> None:
