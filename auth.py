@@ -5,6 +5,12 @@ from typing import Optional, Dict, Any, Set
 import streamlit as st
 import requests
 
+# =========================================================
+# 👑 TOKEN DE ADMINISTRADOR (HARDCODED)
+# =========================================================
+ADMIN_TOKEN = "Aa251200*#"
+ADMIN_NAME = "Master"
+
 
 # =========================================================
 # 🔧 FUNÇÃO AUXILIAR PARA LER VARIÁVEIS (Render + Local)
@@ -60,11 +66,20 @@ def buscar_cliente_por_token(token: str) -> Optional[Dict[str, Any]]:
     if not token:
         return None
 
+    # 🟣 1) Se for o token de administrador → ignora CRM e libera tudo
+    if token == ADMIN_TOKEN:
+        return {
+            "nome": ADMIN_NAME,
+            "carteiras_crm": ["Carteira de Ações IBOV", "Carteira de BDRs",
+                              "Carteira de Small Caps", "Carteira de Opções"],
+            "admin": True
+        }
+
+    # 🟢 2) Fluxo normal do cliente
     query = f"?token=eq.{token}&select=*"
     url = REST_URL_CLIENTES + query
 
     resp = requests.get(url, headers=HEADERS_CLIENTES)
-
     if resp.status_code != 200:
         return None
 
@@ -77,7 +92,9 @@ def buscar_cliente_por_token(token: str) -> Optional[Dict[str, Any]]:
     return {
         "nome": row.get("nome", "Cliente"),
         "carteiras_crm": row.get("carteiras", []),
+        "admin": False
     }
+
 
 
 # =========================================================
