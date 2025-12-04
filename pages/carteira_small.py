@@ -54,28 +54,7 @@ st.success(f"Bem-vindo, **{nome_cliente}**! Aqui está sua carteira **{PAGE_NAME
 
 st.markdown("---")
 
-# =========================================================
-# 📊 EXEMPLO DE SEÇÃO DE DESEMPENHO (EDITAR)
-# =========================================================
-st.subheader("📈 Desempenho Geral da Carteira")
-st.info("📌 Aqui você pode colocar gráficos, KPIs, tabelas, etc.")
 
-# exemplo de placeholder
-st.metric("Retorno 12 meses", "+14,8%")
-st.metric("Volatilidade", "22,5%")
-st.metric("Sharpe", "0,84")
-
-st.markdown("---")
-
-# =========================================================
-# 📋 EXEMPLO DE HOLDINGS / COMPOSIÇÃO
-# =========================================================
-st.subheader("🏦 Composição da Carteira")
-
-# placeholder
-st.write("Lista de ativos, pesos, indicadores, etc.")
-
-st.markdown("---")
 
 # =========================================================
 # 🔙 VOLTAR
@@ -542,7 +521,7 @@ def fetch_quotes_yf(tickers: List[str]) -> Dict[str, float]:
 # -------------------------------------------------------------
 # CONFIGURAÇÃO DA PÁGINA
 # -------------------------------------------------------------
-st.set_page_config(page_title="Painel Visual Carteira Small Caps", layout="wide", page_icon="⭐")
+st.set_page_config(page_title="Painel Visual Carteira Small Caps", layout="wide", page_icon="🟩")
 
 
 
@@ -903,7 +882,7 @@ def badge_status_tempo(last_dt: Optional[Any]) -> Tuple[str, str]:
 # -------------------------------------------------
 
 
-st.title("Painel Visual 🦅  Estratégia Phoenix")
+st.markdown("### 🦅 Phoenix") 
 
 if secao == "Painel":
 
@@ -1574,7 +1553,7 @@ if secao == "Painel":
     def render_resumo_30d(indice_atual):
     
         st.markdown("---")
-        st.markdown(f"### 🦅 Resumo de Desempenho — Últimos 30 dias ({indice_atual})")
+        st.markdown(f"#### 🦅 Resumo de Desempenho 30 dias")
     
         hoje = datetime.date.today()
         inicio_30d = hoje - datetime.timedelta(days=30)
@@ -1751,7 +1730,7 @@ if secao == "Painel":
         # GRÁFICO
         # ========================
         st.markdown("---")
-        st.markdown("#### ⭐ Gráfico dos Resultados dos últimos 30 dias")
+        st.markdown("#### ⭐ Gráfico últimos 30 dias")
     
         df_chart = []
         for x in dados_30d_filtrado:
@@ -1969,22 +1948,22 @@ if secao == "Painel":
 # PAINEL EXCLUSIVO – CARTEIRA SMLL (Small Caps)
 # =====================================================================
 
-aba_smll, = st.tabs(["🟩 SMLL"])
+aba_smll, = st.tabs(["🟩"])
 
 with aba_smll:
     st.session_state["active_tab"] = "SMLL"
 
-    st.markdown("### 🟩 Carteira SMLL")
+    st.markdown("### 🟩 Carteira SMALL CAPS")
 
     # Apenas ativos com índice == SMLL
     pend_smll = [a for a in curto_state.ativos if get_indice_ativo(a) == "SMLL"]
     and_smll  = [a for a in loss_state.ativos  if get_indice_ativo(a) == "SMLL"]
 
-    st.markdown("#### ⚡ Trades Pendentes (SMLL)")
+    st.markdown("#### ⏳ Trades Pendentes")
     render_pendentes_cards(pend_smll)
 
     st.markdown("---")
-    st.markdown("#### ⭐ Trades em Andamento (SMLL)")
+    st.markdown("#### 🔄 Trades em Andamento")
     render_andamento_cards(and_smll)
 
     # 🔥 RESUMO 30 DIAS — SMLL
