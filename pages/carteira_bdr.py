@@ -1,23 +1,87 @@
-from auth import user_logged, user_has_access
+# =========================================================
+# 📄 TEMPLATE PADRÃO PARA PÁGINAS DE CARTEIRAS — FÊNIX
+# =========================================================
+
 import streamlit as st
+from auth import user_logged, user_has_access
 
-PAGE_ID = "carteira_bdr"   # altere para cada página
+# ⚠️ ALTERAR PARA IDENTIFICAR A CARTEIRA
+PAGE_ID = "carteira_bdr"          # ex: carteira_ibov, carteira_small
+PAGE_NAME = "Carteira de BDRs"    # Nome amigável da carteira
 
-# ==========================
+
+# =========================================================
 # 🚫 BLOQUEIO DE ACESSO
-# ==========================
+# =========================================================
+
+# 🔒 1) Usuário não logado
 if not user_logged():
     st.error("⚠ Você não está autenticado.")
-    st.button("🔐 Ir para Login", on_click=lambda: st.switch_page("login.py"))
+    if st.button("🔐 Ir para Login"):
+        st.switch_page("pages/login.py")
     st.stop()
 
+# 🔒 2) Usuário logado mas sem acesso a esta carteira
 if not user_has_access(PAGE_ID):
     st.error("🚫 Você não tem acesso a esta carteira.")
-    st.button(
-    "🏠 Voltar ao Dashboard Geral",
-        on_click=lambda: st.switch_page("pages/dashboard_geral.py")
+
+    st.markdown(
+        f"""
+        <p style="color:#aaa;font-size:15px;">
+            A carteira <strong>{PAGE_NAME}</strong> faz parte do plano Premium.
+            Entre em contato para assinar e liberar sua visualização completa.
+        </p>
+        """,
+        unsafe_allow_html=True
     )
+
+    if st.button("🏠 Voltar ao Dashboard Geral"):
+        st.switch_page("pages/dashboard_geral.py")
     st.stop()
+
+
+# =========================================================
+# ✅ ACESSO LIBERADO — INÍCIO DO CONTEÚDO DA CARTEIRA
+# =========================================================
+
+# 🎉 Header
+st.title(f"📂 {PAGE_NAME}")
+
+cliente = st.session_state.get("cliente", {})
+nome_cliente = cliente.get("nome", "Cliente")
+
+st.success(f"Bem-vindo, **{nome_cliente}**! Aqui está sua carteira **{PAGE_NAME}**.")
+
+st.markdown("---")
+
+# =========================================================
+# 📊 EXEMPLO DE SEÇÃO DE DESEMPENHO (EDITAR)
+# =========================================================
+st.subheader("📈 Desempenho Geral da Carteira")
+st.info("📌 Aqui você pode colocar gráficos, KPIs, tabelas, etc.")
+
+# exemplo de placeholder
+st.metric("Retorno 12 meses", "+14,8%")
+st.metric("Volatilidade", "22,5%")
+st.metric("Sharpe", "0,84")
+
+st.markdown("---")
+
+# =========================================================
+# 📋 EXEMPLO DE HOLDINGS / COMPOSIÇÃO
+# =========================================================
+st.subheader("🏦 Composição da Carteira")
+
+# placeholder
+st.write("Lista de ativos, pesos, indicadores, etc.")
+
+st.markdown("---")
+
+# =========================================================
+# 🔙 VOLTAR
+# =========================================================
+if st.button("⬅️ Voltar ao Dashboard Geral"):
+    st.switch_page("pages/dashboard_geral.py")
 
 
 import os
