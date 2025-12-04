@@ -92,11 +92,8 @@ def buscar_cliente_por_token(token: str) -> Optional[Dict[str, Any]]:
     return {
         "nome": row.get("nome", "Cliente"),
         "carteiras_crm": row.get("carteiras", []),
-        "data_inicio": row.get("data_inicio"),
-        "data_fim": row.get("data_fim"),
         "admin": False
     }
-
 
 
 
@@ -137,9 +134,7 @@ def login_user(cliente: Dict[str, Any]) -> None:
             "nome": cliente["nome"],
             "page_ids": ["dashboard_geral", "carteira_ibov", "carteira_bdr",
                          "carteira_small", "carteira_opcoes"],
-            "admin": True,
-            "data_inicio": cliente.get("data_inicio"),
-            "data_fim": cliente.get("data_fim")
+            "admin": True
         }
         return
 
