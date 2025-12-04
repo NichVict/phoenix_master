@@ -1,21 +1,74 @@
-# -*- coding: utf-8 -*-
-"""
-Buscador de Opções — Oplab v3 + Yahoo (fallback) + IV/Greeks locais
-Versão 2025-10-28
+# =========================================================
+# 📄 TEMPLATE PADRÃO PARA PÁGINAS ADMIN — FÊNIX
+# =========================================================
 
-Recursos:
-- Interface Streamlit (sidebar completa, filtros, um único botão "Rodar buscador")
-- Baixa OHLCV do ativo (Oplab -> fallback Yahoo)
-- Snapshot de opções (Oplab /market/options/{symbol})
-- IV e gregas locais (Black–Scholes + Brent)
-- Filtros: CALL/PUT, janela de vencimento, delta, IV %, volume, spread, e
-  "exigir volume do ativo acima da MM20" (volume financeiro > MM20 do dia mais recente)
-- Gráfico: candles + barras de volume financeiro + MM20 branca
+import streamlit as st
+from auth import user_logged
 
-Requer .env com:
-  OPLAB_API_KEY="seu_token"
-  (opcional) OPLAB_BASE_URL="https://api.oplab.com.br/v3/"
-"""
+# ⚠️ IDENTIFICAÇÃO DA PÁGINA ADMIN
+PAGE_NAME = "Painel Administrativo"   # Ex: "Gestão de Clientes", "Relatórios", etc.
+
+
+# =========================================================
+# 🚫 BLOQUEIO DE ACESSO
+# =========================================================
+
+# 1️⃣ Se não está logado → bloquear
+if not user_logged():
+    st.error("⚠ Você não está autenticado.")
+    if st.button("🔐 Ir para Login"):
+        st.switch_page("pages/login.py")
+    st.stop()
+
+# 2️⃣ Se não é admin → bloquear
+cliente = st.session_state.get("cliente", {})
+if not cliente.get("admin", False):
+    st.error("🚫 Acesso restrito")
+
+    st.markdown(
+        f"""
+        <p style="color:#aaa;font-size:15px;">
+            A página <strong>{PAGE_NAME}</strong> é exclusiva para administradores do sistema.
+            Entre em contato com o suporte caso precise de acesso.
+        </p>
+        """,
+        unsafe_allow_html=True
+    )
+
+    if st.button("🏠 Voltar ao Dashboard Geral"):
+        st.switch_page("pages/dashboard_geral.py")
+
+    st.stop()
+
+
+# =========================================================
+# ✅ ACESSO LIBERADO — CONTEÚDO ADMIN
+# =========================================================
+
+# 🎉 Header
+st.title(f"🛠️ {PAGE_NAME}")
+
+st.success("Você está no Modo Administrador (Master). Acesso total liberado.")
+
+st.markdown("---")
+
+# =========================================================
+# 📊 SEÇÃO ADMIN (EDITAR)
+# =========================================================
+st.subheader("📂 Ferramentas Administrativas")
+st.info("📌 Aqui você insere relatórios, tabelas, gráficos ou controles internos.")
+
+# EXEMPLO DE PLACEHOLDER
+st.write("Área administrativa em construção...")
+
+st.markdown("---")
+
+# =========================================================
+# 🔙 VOLTAR
+# =========================================================
+if st.button("⬅️ Voltar ao Dashboard Geral"):
+    st.switch_page("pages/dashboard_geral.py")
+
 
 from __future__ import annotations
 import os, math
@@ -24,7 +77,7 @@ from datetime import datetime, timedelta, date
 import numpy as np
 import pandas as pd
 import requests, yfinance as yf
-import streamlit as st
+
 import plotly.graph_objects as go
 
 from scipy.stats import norm
