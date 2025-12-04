@@ -8,7 +8,7 @@ import requests
 # =========================================================
 # 👑 TOKEN DE ADMINISTRADOR (HARDCODED)
 # =========================================================
-ADMIN_TOKEN = "Aa251200*#"
+ADMIN_TOKEN = "Aa251200"
 ADMIN_NAME = "Master"
 
 
