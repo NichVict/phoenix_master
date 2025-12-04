@@ -45,7 +45,7 @@ if not user_has_access(PAGE_ID):
 # =========================================================
 
 # 🎉 Header
-st.title(f"📂 {PAGE_NAME}")
+#st.title(f"📂 {PAGE_NAME}")
 
 cliente = st.session_state.get("cliente", {})
 nome_cliente = cliente.get("nome", "Cliente")
@@ -882,12 +882,12 @@ def badge_status_tempo(last_dt: Optional[Any]) -> Tuple[str, str]:
 # -------------------------------------------------
 
 
-st.markdown("### 🦅 Phoenix") 
+#st.markdown("### 🦅 Phoenix") 
 
 if secao == "Painel":
 
     st.caption(f"Atualiza automaticamente a cada {REFRESH_SECONDS}s")
-    st_autorefresh(interval=REFRESH_SECONDS * 1000, key="painel-visual-refresh")
+    st_autorefresh(interval=REFRESH_SECONDS * 100, key="painel-visual-refresh")
     st.markdown("---")
     
     
@@ -1953,7 +1953,7 @@ aba_smll, = st.tabs(["🟩"])
 with aba_smll:
     st.session_state["active_tab"] = "SMLL"
 
-    st.markdown("### 🟩 Carteira SMALL CAPS")
+    st.markdown("### Carteira SMALL CAPS")
 
     # Apenas ativos com índice == SMLL
     pend_smll = [a for a in curto_state.ativos if get_indice_ativo(a) == "SMLL"]
@@ -2045,15 +2045,14 @@ with aba_smll:
       <h1 style="
           margin:0;
           text-align:center;
-          font-size:34px;
+          font-size:29px;
           display:flex;
           justify-content:center;
           align-items:center;
           gap:12px;
       ">
         <span class="eagle-anim">🦅</span>
-        <span class="gradient-text">Estratégia Phoenix</span>
-        <span class="eagle-anim">🦅</span>
+        <span class="gradient-text">Phoenix Strategy</span>        
       </h1>
     
       <p class="phoenix-subtext">
