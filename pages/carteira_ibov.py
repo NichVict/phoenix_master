@@ -54,28 +54,6 @@ st.success(f"Bem-vindo, **{nome_cliente}**! Aqui está sua carteira **{PAGE_NAME
 
 st.markdown("---")
 
-# =========================================================
-# 📊 EXEMPLO DE SEÇÃO DE DESEMPENHO (EDITAR)
-# =========================================================
-st.subheader("📈 Desempenho Geral da Carteira")
-st.info("📌 Aqui você pode colocar gráficos, KPIs, tabelas, etc.")
-
-# exemplo de placeholder
-st.metric("Retorno 12 meses", "+14,8%")
-st.metric("Volatilidade", "22,5%")
-st.metric("Sharpe", "0,84")
-
-st.markdown("---")
-
-# =========================================================
-# 📋 EXEMPLO DE HOLDINGS / COMPOSIÇÃO
-# =========================================================
-st.subheader("🏦 Composição da Carteira")
-
-# placeholder
-st.write("Lista de ativos, pesos, indicadores, etc.")
-
-st.markdown("---")
 
 # =========================================================
 # 🔙 VOLTAR
