@@ -92,8 +92,11 @@ def buscar_cliente_por_token(token: str) -> Optional[Dict[str, Any]]:
     return {
         "nome": row.get("nome", "Cliente"),
         "carteiras_crm": row.get("carteiras", []),
+        "data_inicio": row.get("data_inicio"),
+        "data_fim": row.get("data_fim"),
         "admin": False
     }
+
 
 
 
