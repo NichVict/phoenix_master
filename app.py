@@ -1,12 +1,12 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="Fênix Premium",
+    page_title="Phoenix Strategy",
     page_icon="🦅",
     layout="wide"
 )
 
-st.title("🦅 Fênix Premium")
+st.title("🦅 Phoenix Strategy")
 st.info("Menu lateral totalmente liberado. Todas as carteiras e ferramentas estão acessíveis.")
 
 # ===========================
@@ -20,7 +20,7 @@ if "logged" in st.session_state and st.session_state["logged"]:
 
     st.success(f"👋 Bem-vindo, **{nome}**!")
 
-    st.markdown("### 📂 Suas carteiras ativas:")
+    st.markdown("### 💼 Suas carteiras ativas:")
     
     if carteiras:
         for c in carteiras:
@@ -28,6 +28,6 @@ if "logged" in st.session_state and st.session_state["logged"]:
     else:
         st.warning("Nenhuma carteira ativa no momento.")
 
-    st.info("👉 Use o menu lateral para acessar o desempenho das suas carteiras em tempo real.")
+    st.info("⮘ Use o menu lateral para acessar o desempenho das suas carteiras em tempo real.")
 
 
