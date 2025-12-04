@@ -1,24 +1,22 @@
-# login.py
+# pages/login.py
 import streamlit as st
-from urllib.parse import urlencode
 from auth import buscar_cliente_por_token, login_user, user_logged
 
 st.set_page_config(page_title="Phoenix Login", page_icon="🦅")
+
+DASHBOARD_GERAL_PAGE = "pages/dashboard_geral.py"  # caminho relativo ao app.py
 
 # ============================================
 # 🌐 CAPTURA O TOKEN DA URL
 # ============================================
 query_params = st.query_params
-token = query_params.get("token", [None])
-token = token[0] if isinstance(token, list) else token
-
+token = query_params.get("token", None)  # já vem como string ou None
 
 # ============================================
 # 🔄 SE JÁ ESTÁ LOGADO, ENVIA PARA DASHBOARD
 # ============================================
 if user_logged():
-    st.switch_page("app.py")
-
+    st.switch_page(DASHBOARD_GERAL_PAGE)
 
 # ============================================
 # ❗ SE NÃO TEM TOKEN → EXIBE AVISO
@@ -35,7 +33,6 @@ if not token:
         unsafe_allow_html=True,
     )
     st.stop()
-
 
 # ============================================
 # 🔎 BUSCA CLIENTE PELO TOKEN
@@ -55,11 +52,10 @@ if not cliente:
     )
     st.stop()
 
-
 # ============================================
 # 🔐 LOGIN BEM-SUCEDIDO
 # ============================================
 login_user(cliente)
 
 # Redireciona imediatamente para dashboard geral
-st.switch_page("dashboard_geral.py")
+st.switch_page(DASHBOARD_GERAL_PAGE)
