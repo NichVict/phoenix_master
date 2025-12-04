@@ -3,6 +3,12 @@
 # =========================================================
 from __future__ import annotations
 import streamlit as st
+st.set_page_config(
+    page_title="Scanner de Opções",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 from auth import user_logged
 
 # ⚠️ IDENTIFICAÇÃO DA PÁGINA ADMIN
@@ -132,11 +138,6 @@ def _headers():
 # ============================================================
 # ⚙️ Config inicial do Streamlit
 # ============================================================
-st.set_page_config(
-    page_title="Scanner de Opções",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # ============================================================
 # 🎨 CSS — Estilo da sidebar
