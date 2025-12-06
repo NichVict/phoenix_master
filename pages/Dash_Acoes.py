@@ -1,43 +1,41 @@
 import streamlit as st
 from auth import user_logged
 
-PAGE_NAME = "Dash de Ações (Admin)"
+def main():
 
-# =========================================================
-# 🚫 BLOQUEIO DE ACESSO (ADMIN)
-# =========================================================
+    PAGE_NAME = "Dash de Ações (Admin)"
 
-# Usuário não logado
-if not user_logged():
-    st.error("⚠ Você não está autenticado.")
-    if st.button("🔐 Ir para Login"):
-        st.switch_page("pages/login.py")
-    st.stop()
+    # Usuário não logado
+    if not user_logged():
+        st.error("⚠ Você não está autenticado.")
+        if st.button("🔐 Ir para Login"):
+            st.switch_page("pages/login.py")
+        return
 
-# Usuário logado mas não admin
-cliente = st.session_state.get("cliente", {})
-if not cliente.get("admin", False):
-    st.error("🚫 Acesso restrito")
-    st.markdown(
-        f"""
-        <p style="color:#aaa;font-size:15px;">
-            A página <strong>{PAGE_NAME}</strong> é exclusiva para administradores.
-        </p>
-        """,
-        unsafe_allow_html=True
-    )
-    if st.button("🏠 Voltar ao Dashboard Geral"):
-        st.switch_page("pages/dashboard_geral.py")
-    st.stop()
+    # Usuário logado mas não admin
+    cliente = st.session_state.get("cliente", {})
+    if not cliente.get("admin", False):
+        st.error("🚫 Acesso restrito")
+        st.markdown(
+            f"""
+            <p style="color:#aaa;font-size:15px;">
+                A página <strong>{PAGE_NAME}</strong> é exclusiva para administradores.
+            </p>
+            """,
+            unsafe_allow_html=True
+        )
+        if st.button("🏠 Voltar ao Dashboard Geral"):
+            st.switch_page("pages/dashboard_geral.py")
+        return
 
-# =========================================================
-# 🎉 ACESSO LIBERADO
-# =========================================================
-st.title(f"📊 {PAGE_NAME}")
-st.success("Você está no modo Administrador.")
+    # SE CHEGAR AQUI → ADMIN
+    st.title(f"📊 {PAGE_NAME}")
+    st.success("Você está no modo Administrador.")
 
 
-st.markdown("---")
+if __name__ == "__main__":
+    main()
+
 
 
 
