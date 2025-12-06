@@ -5,6 +5,11 @@
 import streamlit as st
 from auth import user_logged
 
+# --- BLOQUEIA EXECUÇÃO DURANTE O PRELOAD DO STREAMLIT ---
+if st.session_state.get("_preloading", True):
+    st.stop()
+
+
 # ⚠️ IDENTIFICAÇÃO DA PÁGINA ADMIN
 PAGE_NAME = "Painel Administrativo"   # Ex: "Gestão de Clientes", "Relatórios", etc.
 
