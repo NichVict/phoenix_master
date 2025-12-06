@@ -1,9 +1,9 @@
 import streamlit as st
 from auth import user_logged
 
-# Evita execução automática no preload do Streamlit
-if st._is_running_with_streamlit and st.session_state.get("_bp_load_once", True):
-    st.session_state["_bp_load_once"] = False
+
+# --- BLOQUEIA EXECUÇÃO DURANTE O PRELOAD DO STREAMLIT ---
+if st.session_state.get("_preloading", True):
     st.stop()
 
 PAGE_NAME = "Painel Administrativo"
