@@ -2,8 +2,8 @@
 import streamlit as st
 from auth import buscar_cliente_por_token, login_user, user_logged
 
-# Página de destino padrão após login
-DASHBOARD_GERAL_PAGE = "dashboard_geral.py"
+# 🔹 Caminho correto relativo ao app.py (como era antes)
+DASHBOARD_GERAL_PAGE = "pages/dashboard_geral.py"
 
 st.set_page_config(
     page_title="Phoenix Login",
