@@ -1,9 +1,11 @@
 import streamlit as st
 from auth import user_logged
 
-PAGE_ID = "dash_acoes"
+PAGE_NAME = "Dash de Ações (Admin)"
 
+# =========================================================
 # 🚫 BLOQUEIO DE ACESSO (ADMIN)
+# =========================================================
 
 # Usuário não logado
 if not user_logged():
@@ -12,15 +14,14 @@ if not user_logged():
         st.switch_page("pages/login.py")
     st.stop()
 
-# Usuário logado mas NÃO ADMIN
+# Usuário logado mas não admin
 cliente = st.session_state.get("cliente", {})
 if not cliente.get("admin", False):
     st.error("🚫 Acesso restrito")
     st.markdown(
-        """
+        f"""
         <p style="color:#aaa;font-size:15px;">
-            A página <strong>Dashboard de Ações</strong> é exclusiva para administradores do sistema.
-            Entre em contato com o suporte caso precise de acesso.
+            A página <strong>{PAGE_NAME}</strong> é exclusiva para administradores.
         </p>
         """,
         unsafe_allow_html=True
@@ -30,10 +31,11 @@ if not cliente.get("admin", False):
     st.stop()
 
 # =========================================================
-# 🎉 ACESSO ADMIN LIBERADO — CONTEÚDO DA PÁGINA
+# 🎉 ACESSO LIBERADO
 # =========================================================
-st.title("📊 Dash de Ações — Administração")
-st.success("Você está no Modo Administrador (Master). Acesso total liberado.")
+st.title(f"📊 {PAGE_NAME}")
+st.success("Você está no modo Administrador.")
+
 
 st.markdown("---")
 
