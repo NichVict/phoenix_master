@@ -12,11 +12,22 @@ st.set_page_config(
 from auth import user_logged
 
 # ⚠️ IDENTIFICAÇÃO DA PÁGINA ADMIN
-PAGE_NAME = "Painel Administrativo"   # Ex: "Gestão de Clientes", "Relatórios", etc.
-
+PAGE_ID = "admin_scanner_opcoes"
+PAGE_NAME = "Painel Administrativo"
 
 # =========================================================
-# 🚫 BLOQUEIO DE ACESSO
+# 🔐 BLOQUEIO DE EXECUÇÃO INDEVIDA (PRELOAD / DASHBOARD)
+# =========================================================
+
+# 1️⃣ Registra que esta é a página ativa
+st.session_state["current_page"] = PAGE_ID
+
+# 2️⃣ Se esta página estiver executando sem ser a ativa → parar
+if st.session_state.get("current_page") != PAGE_ID:
+    st.stop()
+
+# =========================================================
+# 🚫 BLOQUEIO DE ACESSO (continua igual)
 # =========================================================
 
 # 1️⃣ Se não está logado → bloquear
@@ -46,32 +57,23 @@ if not cliente.get("admin", False):
 
     st.stop()
 
-
 # =========================================================
 # ✅ ACESSO LIBERADO — CONTEÚDO ADMIN
 # =========================================================
 
-# 🎉 Header
 st.title(f"🛠️ {PAGE_NAME}")
 
 st.success("Você está no Modo Administrador (Master). Acesso total liberado.")
 
 st.markdown("---")
 
-# =========================================================
-# 📊 SEÇÃO ADMIN (EDITAR)
-# =========================================================
 st.subheader("📂 Ferramentas Administrativas")
 st.info("📌 Aqui você insere relatórios, tabelas, gráficos ou controles internos.")
 
-# EXEMPLO DE PLACEHOLDER
 st.write("Área administrativa em construção...")
 
 st.markdown("---")
 
-# =========================================================
-# 🔙 VOLTAR
-# =========================================================
 if st.button("⬅️ Voltar ao Dashboard Geral"):
     st.switch_page("pages/dashboard_geral.py")
 
