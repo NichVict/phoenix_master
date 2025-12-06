@@ -9,19 +9,9 @@ from auth import user_logged, user_has_access
 PAGE_ID = "carteira_small"          # ex: carteira_ibov, carteira_small
 PAGE_NAME = "Carteira de Small Caps"    # Nome amigável da carteira
 
-# =========================================================
-# 🔐 BLOQUEIO DE EXECUÇÃO INDEVIDA (PRELOAD / DASHBOARD)
-# =========================================================
-
-# 1️⃣ Marca que esta página está sendo aberta **pelo usuário**
-st.session_state["current_page"] = PAGE_ID
-
-# 2️⃣ Se esta página estiver sendo executada sem ser a ativa (ex: preload)
-if st.session_state.get("current_page") != PAGE_ID:
-    st.stop()
 
 # =========================================================
-# 🚫 BLOQUEIO DE ACESSO (continua igual)
+# 🚫 BLOQUEIO DE ACESSO
 # =========================================================
 
 # 🔒 1) Usuário não logado
@@ -49,9 +39,13 @@ if not user_has_access(PAGE_ID):
         st.switch_page("pages/dashboard_geral.py")
     st.stop()
 
+
 # =========================================================
 # ✅ ACESSO LIBERADO — INÍCIO DO CONTEÚDO DA CARTEIRA
 # =========================================================
+
+# 🎉 Header
+#st.title(f"📂 {PAGE_NAME}")
 
 cliente = st.session_state.get("cliente", {})
 nome_cliente = cliente.get("nome", "Cliente")
@@ -60,11 +54,14 @@ st.success(f"Bem-vindo, **{nome_cliente}**! Aqui está sua carteira **{PAGE_NAME
 
 st.markdown("---")
 
+
+
 # =========================================================
 # 🔙 VOLTAR
 # =========================================================
 if st.button("⬅️ Voltar ao Dashboard Geral"):
     st.switch_page("pages/dashboard_geral.py")
+
 
 
 
