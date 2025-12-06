@@ -6,22 +6,11 @@ import streamlit as st
 from auth import user_logged
 
 # ⚠️ IDENTIFICAÇÃO DA PÁGINA ADMIN
-PAGE_ID = "admin_page_2"            # nome único para esta página admin
-PAGE_NAME = "Painel Administrativo" # Ex: "Gestão de Clientes", "Relatórios", etc.
+PAGE_NAME = "Painel Administrativo"   # Ex: "Gestão de Clientes", "Relatórios", etc.
+
 
 # =========================================================
-# 🔐 BLOQUEIO DE EXECUÇÃO INDEVIDA (PRELOAD / DASHBOARD)
-# =========================================================
-
-# 1️⃣ Marca que esta página está sendo aberta **pelo usuário**
-st.session_state["current_page"] = PAGE_ID
-
-# 2️⃣ Se esta página estiver sendo executada sem ser a ativa (ex: preload)
-if st.session_state.get("current_page") != PAGE_ID:
-    st.stop()
-
-# =========================================================
-# 🚫 BLOQUEIO DE ACESSO (continua igual)
+# 🚫 BLOQUEIO DE ACESSO
 # =========================================================
 
 # 1️⃣ Se não está logado → bloquear
@@ -51,23 +40,32 @@ if not cliente.get("admin", False):
 
     st.stop()
 
+
 # =========================================================
 # ✅ ACESSO LIBERADO — CONTEÚDO ADMIN
 # =========================================================
 
+# 🎉 Header
 st.title(f"🛠️ {PAGE_NAME}")
 
 st.success("Você está no Modo Administrador (Master). Acesso total liberado.")
 
 st.markdown("---")
 
+# =========================================================
+# 📊 SEÇÃO ADMIN (EDITAR)
+# =========================================================
 st.subheader("📂 Ferramentas Administrativas")
 st.info("📌 Aqui você insere relatórios, tabelas, gráficos ou controles internos.")
 
+# EXEMPLO DE PLACEHOLDER
 st.write("Área administrativa em construção...")
 
 st.markdown("---")
 
+# =========================================================
+# 🔙 VOLTAR
+# =========================================================
 if st.button("⬅️ Voltar ao Dashboard Geral"):
     st.switch_page("pages/dashboard_geral.py")
 
