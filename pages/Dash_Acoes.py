@@ -1,24 +1,9 @@
 import streamlit as st
 from auth import user_logged
 
-# =========================================================
-# ⚡ IDENTIFICAÇÃO EXCLUSIVA DESTA PÁGINA
-# =========================================================
 PAGE_ID = "dash_acoes"
 
-# =========================================================
-# 🛑 BLOQUEIO DE EXECUÇÃO INDEVIDA (PRELOAD)
-# =========================================================
-# Se outra página for a ativa no momento, interrompe
-if st.session_state.get("current_page_active") != PAGE_ID:
-    st.stop()
-
-# Marca oficialmente que esta página é a ativa
-st.session_state["current_page_active"] = PAGE_ID
-
-# =========================================================
 # 🚫 BLOQUEIO DE ACESSO (ADMIN)
-# =========================================================
 
 # Usuário não logado
 if not user_logged():
