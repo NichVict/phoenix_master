@@ -1,75 +1,57 @@
-# =========================================================
-# 📄 TEMPLATE PADRÃO PARA PÁGINAS ADMIN — FÊNIX
-# =========================================================
-
 import streamlit as st
 from auth import user_logged
 
-# ⚠️ IDENTIFICAÇÃO DA PÁGINA ADMIN
-PAGE_ID = "admin"
-PAGE_NAME = "Painel Administrativo"   # Ex: "Gestão de Clientes", "Relatórios", etc.
+# =========================================================
+# ⚡ IDENTIFICAÇÃO EXCLUSIVA DESTA PÁGINA
+# =========================================================
+PAGE_ID = "dash_acoes"
 
 # =========================================================
-# 🔐 BLOQUEIO DE EXECUÇÃO INDEVIDA (PRELOAD / DASHBOARD)
+# 🛑 BLOQUEIO DE EXECUÇÃO INDEVIDA (PRELOAD)
 # =========================================================
-
-# 1️⃣ Marca que esta página está sendo aberta **pelo usuário**
-st.session_state["current_page"] = PAGE_ID
-
-# 2️⃣ Se esta página estiver sendo executada sem ser a ativa (ex: preload)
-if st.session_state.get("current_page") != PAGE_ID:
+# Se outra página for a ativa no momento, interrompe
+if st.session_state.get("current_page_active") != PAGE_ID:
     st.stop()
 
+# Marca oficialmente que esta página é a ativa
+st.session_state["current_page_active"] = PAGE_ID
+
 # =========================================================
-# 🚫 BLOQUEIO DE ACESSO (continua igual)
+# 🚫 BLOQUEIO DE ACESSO (ADMIN)
 # =========================================================
 
-# 1️⃣ Se não está logado → bloquear
+# Usuário não logado
 if not user_logged():
     st.error("⚠ Você não está autenticado.")
     if st.button("🔐 Ir para Login"):
         st.switch_page("pages/login.py")
     st.stop()
 
-# 2️⃣ Se não é admin → bloquear
+# Usuário logado mas NÃO ADMIN
 cliente = st.session_state.get("cliente", {})
 if not cliente.get("admin", False):
     st.error("🚫 Acesso restrito")
-
     st.markdown(
-        f"""
+        """
         <p style="color:#aaa;font-size:15px;">
-            A página <strong>{PAGE_NAME}</strong> é exclusiva para administradores do sistema.
+            A página <strong>Dashboard de Ações</strong> é exclusiva para administradores do sistema.
             Entre em contato com o suporte caso precise de acesso.
         </p>
         """,
         unsafe_allow_html=True
     )
-
     if st.button("🏠 Voltar ao Dashboard Geral"):
         st.switch_page("pages/dashboard_geral.py")
-
     st.stop()
 
 # =========================================================
-# ✅ ACESSO LIBERADO — CONTEÚDO ADMIN
+# 🎉 ACESSO ADMIN LIBERADO — CONTEÚDO DA PÁGINA
 # =========================================================
-
-st.title(f"🛠️ {PAGE_NAME}")
-
+st.title("📊 Dash de Ações — Administração")
 st.success("Você está no Modo Administrador (Master). Acesso total liberado.")
 
 st.markdown("---")
 
-st.subheader("📂 Ferramentas Administrativas")
-st.info("📌 Aqui você insere relatórios, tabelas, gráficos ou controles internos.")
-
-st.write("Área administrativa em construção...")
-
-st.markdown("---")
-
-if st.button("⬅️ Voltar ao Dashboard Geral"):
-    st.switch_page("pages/dashboard_geral.py")
 
 
 
