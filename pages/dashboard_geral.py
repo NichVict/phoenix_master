@@ -2,6 +2,7 @@ import streamlit as st
 from auth import user_logged
 
 PAGE_ID = "dashboard_geral"
+st.session_state["current_page"] = PAGE_ID
 
 st.set_page_config(page_title="Dashboard Geral", page_icon="🦅")
 
@@ -26,20 +27,26 @@ else:
     st.info("Bem-vindo ao Phoenix Strategy! Você está usando a versão aberta do dashboard.")
 
 # ======================================================
+# 🛡 PROTEÇÃO IMPORTANTE
+#   Impede que páginas de carteiras sejam executadas no F5
+#   e exibam mensagens de "Você não está autenticado"
+# ======================================================
+if st.session_state.get("current_page") != "dashboard_geral":
+    st.stop()
+
+# ======================================================
 # 📂 CARTEIRAS DISPONÍVEIS
 # ======================================================
 st.markdown("### Suas assinaturas:")
 
 if cliente:
-    # Usuário logado — mostrar apenas o que ele tem
-    if len(carteiras) > 1:  # tem algo além do dashboard_geral
+    if len(carteiras) > 1:
         for c in carteiras:
             if c != "dashboard_geral":
                 st.markdown(f"- **{c.replace('_', ' ').title()}**")
     else:
         st.markdown("Você ainda não possui carteiras premium ativas.")
 else:
-    # Visitante — nenhuma restrição
     st.markdown(
         "Você está usando o dashboard aberto. "
         "Para liberar carteiras premium, faça uma assinatura."
