@@ -33,8 +33,6 @@ def main():
     st.success("Você está no modo Administrador.")
 
 
-if __name__ == "__main__":
-    main()
 
 
 
@@ -5240,3 +5238,9 @@ if secao == "Relatórios":
     
             except Exception as e:
                 st.error(f"Erro: {e}")
+
+
+
+if __name__ == "__main__":
+    main()
+
