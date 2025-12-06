@@ -7,11 +7,21 @@ from auth import user_logged, user_has_access
 
 # ⚠️ ALTERAR PARA IDENTIFICAR A CARTEIRA
 PAGE_ID = "carteira_opcoes"          # ex: carteira_ibov, carteira_small
-PAGE_NAME = "Carteira de Opções"    # Nome amigável da carteira
-
+PAGE_NAME = "Carteira de Opções"     # Nome amigável da carteira
 
 # =========================================================
-# 🚫 BLOQUEIO DE ACESSO
+# 🔐 BLOQUEIO DE EXECUÇÃO INDEVIDA (PRELOAD / DASHBOARD)
+# =========================================================
+
+# 1️⃣ Marca que esta página está sendo aberta **pelo usuário**
+st.session_state["current_page"] = PAGE_ID
+
+# 2️⃣ Se esta página estiver sendo executada sem ser a ativa (ex: preload)
+if st.session_state.get("current_page") != PAGE_ID:
+    st.stop()
+
+# =========================================================
+# 🚫 BLOQUEIO DE ACESSO (continua igual)
 # =========================================================
 
 # 🔒 1) Usuário não logado
@@ -39,7 +49,6 @@ if not user_has_access(PAGE_ID):
         st.switch_page("pages/dashboard_geral.py")
     st.stop()
 
-
 # =========================================================
 # ✅ ACESSO LIBERADO — INÍCIO DO CONTEÚDO DA CARTEIRA
 # =========================================================
@@ -54,28 +63,7 @@ st.success(f"Bem-vindo, **{nome_cliente}**! Aqui está sua carteira **{PAGE_NAME
 
 st.markdown("---")
 
-# =========================================================
-# 📊 EXEMPLO DE SEÇÃO DE DESEMPENHO (EDITAR)
-# =========================================================
-st.subheader("📈 Desempenho Geral da Carteira")
-st.info("📌 Aqui você pode colocar gráficos, KPIs, tabelas, etc.")
 
-# exemplo de placeholder
-st.metric("Retorno 12 meses", "+14,8%")
-st.metric("Volatilidade", "22,5%")
-st.metric("Sharpe", "0,84")
-
-st.markdown("---")
-
-# =========================================================
-# 📋 EXEMPLO DE HOLDINGS / COMPOSIÇÃO
-# =========================================================
-st.subheader("🏦 Composição da Carteira")
-
-# placeholder
-st.write("Lista de ativos, pesos, indicadores, etc.")
-
-st.markdown("---")
 
 # =========================================================
 # 🔙 VOLTAR
