@@ -1,14 +1,13 @@
-# =========================================================
-# 📄 TEMPLATE PADRÃO PARA PÁGINAS ADMIN — FÊNIX
-# =========================================================
-
 import streamlit as st
 from auth import user_logged
 
+# Evita execução automática no preload do Streamlit
+if st._is_running_with_streamlit and st.session_state.get("_bp_load_once", True):
+    st.session_state["_bp_load_once"] = False
+    st.stop()
 
+PAGE_NAME = "Painel Administrativo"
 
-# ⚠️ IDENTIFICAÇÃO DA PÁGINA ADMIN
-PAGE_NAME = "Painel Administrativo"   # Ex: "Gestão de Clientes", "Relatórios", etc.
 
 
 # =========================================================
