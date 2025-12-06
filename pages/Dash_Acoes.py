@@ -1,24 +1,44 @@
+# =========================================================
+# 📄 TEMPLATE PADRÃO PARA PÁGINAS ADMIN — FÊNIX
+# =========================================================
+
 import streamlit as st
 from auth import user_logged
 
-PAGE_NAME = "Dash de Ações (Admin)"
+# ⚠️ IDENTIFICAÇÃO DA PÁGINA ADMIN
+PAGE_NAME = "Painel Administrativo"   # Ex: "Gestão de Clientes", "Relatórios", etc.
 
-# --- Filtro normal, sem current_page ---
+
+# =========================================================
+# 🚫 BLOQUEIO DE ACESSO
+# =========================================================
+
+# 1️⃣ Se não está logado → bloquear
 if not user_logged():
     st.error("⚠ Você não está autenticado.")
     if st.button("🔐 Ir para Login"):
         st.switch_page("pages/login.py")
     st.stop()
 
+# 2️⃣ Se não é admin → bloquear
 cliente = st.session_state.get("cliente", {})
-
 if not cliente.get("admin", False):
     st.error("🚫 Acesso restrito")
-    st.markdown("Página exclusiva para administradores.")
+
+    st.markdown(
+        f"""
+        <p style="color:#aaa;font-size:15px;">
+            A página <strong>{PAGE_NAME}</strong> é exclusiva para administradores do sistema.
+            Entre em contato com o suporte caso precise de acesso.
+        </p>
+        """,
+        unsafe_allow_html=True
+    )
+
     if st.button("🏠 Voltar ao Dashboard Geral"):
         st.switch_page("pages/dashboard_geral.py")
-    st.stop()
 
+    st.stop()
 
 
 # =========================================================
