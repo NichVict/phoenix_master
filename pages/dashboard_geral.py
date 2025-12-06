@@ -28,7 +28,7 @@ else:
 # ======================================================
 # 📂 CARTEIRAS DISPONÍVEIS
 # ======================================================
-st.markdown("### 📁 Suas assinaturas / carteiras:")
+st.markdown("### Suas assinaturas:")
 
 if cliente:
     # Usuário logado — mostrar apenas o que ele tem
