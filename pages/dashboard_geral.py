@@ -1,37 +1,41 @@
 import streamlit as st
 from auth import user_logged
 
-PAGE_ID = "dashboard_geral"
-
 st.set_page_config(page_title="Dashboard Geral", page_icon="🦅")
 
-# ----------------------------
-# IDENTIDADE DO CLIENTE
-# ----------------------------
+PAGE_ID = "dashboard_geral"
+
+# --------------------------------------------------------------------
+# IDENTIDADE DO CLIENTE (visitante, assinante ou admin)
+# --------------------------------------------------------------------
 if user_logged():
     cliente = st.session_state.get("cliente", {})
 else:
     cliente = None
 
+nome = cliente.get("nome") if cliente else None
+carteiras = cliente.get("page_ids", []) if cliente else []
 
-# ======================================================
-# 🏷️ CABEÇALHO
-# ======================================================
+# --------------------------------------------------------------------
+# CABEÇALHO
+# --------------------------------------------------------------------
 if nome:
     st.success(f"Bem-vindo, **{nome}**! 👋")
 else:
     st.info("Bem-vindo ao Phoenix Strategy! Você está usando a versão aberta do dashboard.")
 
-# ======================================================
-# 📂 CARTEIRAS DISPONÍVEIS
-# ======================================================
+# --------------------------------------------------------------------
+# ASSINATURAS / CARTEIRAS
+# --------------------------------------------------------------------
 st.markdown("### Suas assinaturas:")
 
 if cliente:
-    if len(carteiras) > 1:
-        for c in carteiras:
-            if c != "dashboard_geral":
-                st.markdown(f"- **{c.replace('_', ' ').title()}**")
+    # Remove o dashboard da lista
+    carteiras_exibicao = [c for c in carteiras if c != "dashboard_geral"]
+
+    if len(carteiras_exibicao) > 0:
+        for c in carteiras_exibicao:
+            st.markdown(f"- **{c.replace('_', ' ').title()}**")
     else:
         st.markdown("Você ainda não possui carteiras premium ativas.")
 else:
@@ -41,6 +45,11 @@ else:
     )
 
 st.markdown("---")
+
+# --------------------------------------------------------------------
+# FIM DO DASHBOARD (nenhum bloqueio adicional)
+# --------------------------------------------------------------------
+
 
 
 # ======================================================
