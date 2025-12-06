@@ -1,31 +1,51 @@
 import streamlit as st
 from auth import user_logged
 
+PAGE_ID = "dashboard_geral"
+
 st.set_page_config(page_title="Dashboard Geral", page_icon="🦅")
 
-# ⚠️ NÃO COLOQUE QUALQUER REGRA DE current_page AQUI.
-# ⚠️ ESTA PÁGINA É 100% LIVRE PARA VISITANTES.
+# ======================================================
+# 👤 IDENTIDADE DO CLIENTE (logado OU visitante)
+# ======================================================
+cliente = st.session_state.get("cliente", {})
 
-# ----------------------------------------
-# IDENTIDADE DO CLIENTE (se estiver logado)
-# ----------------------------------------
-cliente = st.session_state.get("cliente", None)
-
-if cliente:
+if user_logged():
     nome = cliente.get("nome", "Investidor")
     carteiras = cliente.get("page_ids", [])
 else:
     nome = None
     carteiras = []
 
+# ======================================================
+# 🏷️ CABEÇALHO
+# ======================================================
+#st.title("🦅 Dashboard Geral — Fênix Premium")
 
-st.markdown("---")
+if nome:
+    st.success(f"Bem-vindo, **{nome}**! 👋")
+else:
+    st.info("Bem-vindo ao Phoenix Strategy! Faça login pelo link mágico para ver suas carteiras.")
 
-# --------------------------------------------------------------------
-# FIM DO DASHBOARD (nenhum bloqueio adicional)
-# --------------------------------------------------------------------
+# ======================================================
+# 📂 CARTEIRAS DISPONÍVEIS
+# ======================================================
+st.markdown("### 📁 Suas assinaturas / carteiras:")
 
-
+if not user_logged():
+    st.warning("Faça login para ver suas carteiras personalizadas.")
+else:
+    if len(carteiras) <= 1:  # só tem dashboard_geral
+        st.warning(
+            """
+            **Você ainda não possui nenhuma assinatura ativa.**  
+            Explore nossas carteiras no menu lateral e conheça nossos produtos.
+            """
+        )
+    else:
+        for c in carteiras:
+            if c != "dashboard_geral":
+                st.markdown(f"- **{c.replace('_', ' ').title()}**")
 
 # ======================================================
 # 📣 SEÇÃO DE CHAMADA / OFERTA
