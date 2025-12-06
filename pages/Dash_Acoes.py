@@ -10,7 +10,7 @@ def main():
         st.error("⚠ Você não está autenticado.")
         if st.button("🔐 Ir para Login"):
             st.switch_page("pages/login.py")
-        return
+        st.stop()
 
     # Usuário logado mas não admin
     cliente = st.session_state.get("cliente", {})
@@ -26,16 +26,11 @@ def main():
         )
         if st.button("🏠 Voltar ao Dashboard Geral"):
             st.switch_page("pages/dashboard_geral.py")
-        return
+        st.stop()
 
     # SE CHEGAR AQUI → ADMIN
     st.title(f"📊 {PAGE_NAME}")
     st.success("Você está no modo Administrador.")
-
-
-
-
-
 
 
 
