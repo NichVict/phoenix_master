@@ -86,7 +86,7 @@ def supabase_select_opcoes(query_string: str):
 REST_ENDPOINT_OP = getattr(supabase_ops_mod, "REST_ENDPOINT", None)
 HEADERS_OP = getattr(supabase_ops_mod, "HEADERS", None)
 
-LINK_ASSINAR = "https://app.infinitepay.io/products"
+LINK_ASSINAR = "https://linknabio.gg/aurinvest"
 
 
 
