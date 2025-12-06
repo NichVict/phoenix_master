@@ -1,4 +1,5 @@
 import streamlit as st
+st.session_state["_preloading"] = False
 
 st.set_page_config(
     page_title="Phoenix Strategy",
