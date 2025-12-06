@@ -8,9 +8,9 @@ st.set_page_config(page_title="Dashboard Geral", page_icon="🦅")
 # ======================================================
 # 👤 IDENTIDADE DO CLIENTE (logado OU visitante)
 # ======================================================
-cliente = st.session_state.get("cliente", {})
+cliente = st.session_state.get("cliente")
 
-if user_logged():
+if cliente:
     nome = cliente.get("nome", "Investidor")
     carteiras = cliente.get("page_ids", [])
 else:
@@ -20,32 +20,31 @@ else:
 # ======================================================
 # 🏷️ CABEÇALHO
 # ======================================================
-#st.title("🦅 Dashboard Geral — Fênix Premium")
-
 if nome:
     st.success(f"Bem-vindo, **{nome}**! 👋")
 else:
-    st.info("Bem-vindo ao Phoenix Strategy! Faça login pelo link mágico para ver suas carteiras.")
+    st.info("Bem-vindo ao Phoenix Strategy! Você está usando a versão aberta do dashboard.")
 
 # ======================================================
 # 📂 CARTEIRAS DISPONÍVEIS
 # ======================================================
 st.markdown("### 📁 Suas assinaturas / carteiras:")
 
-if not user_logged():
-    st.warning("Faça login para ver suas carteiras personalizadas.")
-else:
-    if len(carteiras) <= 1:  # só tem dashboard_geral
-        st.warning(
-            """
-            **Você ainda não possui nenhuma assinatura ativa.**  
-            Explore nossas carteiras no menu lateral e conheça nossos produtos.
-            """
-        )
-    else:
+if cliente:
+    # Usuário logado — mostrar apenas o que ele tem
+    if len(carteiras) > 1:  # tem algo além do dashboard_geral
         for c in carteiras:
             if c != "dashboard_geral":
                 st.markdown(f"- **{c.replace('_', ' ').title()}**")
+    else:
+        st.markdown("Você ainda não possui carteiras premium ativas.")
+else:
+    # Visitante — nenhuma restrição
+    st.markdown(
+        "Você está usando o dashboard aberto. "
+        "Para liberar carteiras premium, faça uma assinatura."
+    )
+
 
 # ======================================================
 # 📣 SEÇÃO DE CHAMADA / OFERTA
