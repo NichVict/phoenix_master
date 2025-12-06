@@ -1,21 +1,18 @@
 import streamlit as st
+from auth import user_logged
 
 PAGE_ID = "dashboard_geral"
-st.session_state["current_page"] = PAGE_ID
 
 st.set_page_config(page_title="Dashboard Geral", page_icon="🦅")
 
-# ======================================================
-# 👤 IDENTIDADE DO CLIENTE (logado OU visitante)
-# ======================================================
-cliente = st.session_state.get("cliente")
-
-if cliente:
-    nome = cliente.get("nome", "Investidor")
-    carteiras = cliente.get("page_ids", [])
+# ----------------------------
+# IDENTIDADE DO CLIENTE
+# ----------------------------
+if user_logged():
+    cliente = st.session_state.get("cliente", {})
 else:
-    nome = None
-    carteiras = []
+    cliente = None
+
 
 # ======================================================
 # 🏷️ CABEÇALHO
